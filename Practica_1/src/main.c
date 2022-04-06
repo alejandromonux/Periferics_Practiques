@@ -33,8 +33,65 @@ SOFTWARE.
 
 /* Private macro */
 /* Private variables */
+char interrupts;
 /* Private function prototypes */
 /* Private functions */
+
+/*
+ *
+ *TIMER
+ *CONFIG
+ *
+ */
+void TIM_INT_Init()
+{
+    // Enable clock for TIM2
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+
+    // TIM2 initialization overflow every 500ms
+    // TIM2 by default has clock of 84MHz
+    // Here, we must set value of prescaler and period,
+    // so update event is 0.5Hz or 500ms
+    // Update Event (Hz) = timer_clock / ((TIM_Prescaler + 1) *  (TIM_Period + 1))
+    // Update Event (Hz) = 84MHz / ((299+ 1) * (279+ 1)) = 1000 Hz
+    TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct;
+    TIM_TimeBaseInitStruct.TIM_Prescaler = 299;
+    TIM_TimeBaseInitStruct.TIM_Period = 279;
+    TIM_TimeBaseInitStruct.TIM_ClockDivision = TIM_CKD_DIV1;
+    TIM_TimeBaseInitStruct.TIM_CounterMode = TIM_CounterMode_Up;
+
+    // TIM2 initialize
+    TIM_TimeBaseInit(TIM2, &TIM_TimeBaseInitStruct);
+    // Enable TIM2 interrupt
+    TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
+    // Start TIM2
+    TIM_Cmd(TIM2, ENABLE);
+
+    // Nested vectored interrupt settings
+    // TIM2 interrupt is most important (PreemptionPriority and
+    // SubPriority = 0)
+    NVIC_InitTypeDef NVIC_InitStruc	t;
+    NVIC_InitStruct.NVIC_IRQChannel = TIM2_IRQn;
+    NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStruct);
+}
+
+void TIM2_IRQHandler()
+{
+	//Mirem la flag
+    if (TIM_GetITStatus(TIM2, TIM_IT_Update))
+    {
+    	if(interrupts ==250){
+    		STM_EVAL_LEDToggle(LED3);
+    	}else{
+    		interrupts++;
+    	}
+        // Netejem la flag
+        TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+    }
+}
 
 /**
 **===========================================================================
@@ -45,6 +102,7 @@ SOFTWARE.
 */
 int main(void)
 {
+	interrupts = 0;
 
   /**
   *  IMPORTANT NOTE!
@@ -62,7 +120,8 @@ int main(void)
   STM_EVAL_LEDInit(LED4);
   //Configurar el botón
   STM_EVAL_PBInit(BUTTON_USER,BUTTON_MODE_GPIO);
-
+  //Configurar el timer
+  TIM_INT_Init();
   /* Infinite loop */
   while (1)
   {
