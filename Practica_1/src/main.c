@@ -34,6 +34,7 @@ SOFTWARE.
 /* Private macro */
 /* Private variables */
 static char interrupts;
+char wheelsOn;
 /* Private function prototypes */
 /* Private functions */
 
@@ -80,7 +81,6 @@ void TIM_INT_Init()
 
 void TIM2_IRQHandler()
 {
-	STM_EVAL_LEDOn(LED4);
 	//Mirem la flag
     //if (TIM_GetITStatus(TIM2, TIM_IT_Update))
     //{
@@ -90,6 +90,7 @@ void TIM2_IRQHandler()
 	}else{
 		interrupts++;
 	}
+
 	// Netejem la flag
 	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
     //}
@@ -102,9 +103,13 @@ void TIM2_IRQHandler()
 **
 **===========================================================================
 */
+void INIT_IO_PRACTICA_1(){
+
+}
 int main(void)
 {
 	interrupts = 0;
+	wheelsOn = 0;
 
   /**
   *  IMPORTANT NOTE!
@@ -117,7 +122,7 @@ int main(void)
   */
 
   /* TODO - Add your application code here */
-
+  INIT_IO_PRACTICA_1();
   STM_EVAL_LEDInit(LED3);
   STM_EVAL_LEDInit(LED4);
   //Configurar el botón
@@ -129,8 +134,7 @@ int main(void)
   {
 
 	  if (STM_EVAL_PBGetState(BUTTON_USER)==1){
-		  STM_EVAL_LEDToggle(LED3);
-		  STM_EVAL_LEDToggle(LED4);
+		  wheelsOn = 1-wheelsOn;
 	  }
   }
 }
