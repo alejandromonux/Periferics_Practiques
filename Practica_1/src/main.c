@@ -111,8 +111,8 @@ void TIM2_IRQHandler()
  * intIndex: 0 si EXTI1, 1 si EXTI2
  */
 
-#define MAXINTVALUE 20
-int getRevs(char intIndex){
+#define MAXINTVALUE 4294967295
+int getRevs(int intIndex){
 	if (periodMS[intIndex] == -1){
 		periodMS[intIndex] = miliseconds;
 		return -1;
