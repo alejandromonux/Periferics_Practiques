@@ -33,7 +33,7 @@ SOFTWARE.
 
 /* Private macro */
 /* Private variables */
-char interrupts;
+static char interrupts;
 /* Private function prototypes */
 /* Private functions */
 
@@ -48,7 +48,7 @@ void TIM_INT_Init()
     // Enable clock for TIM2
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 
-    // TIM2 initialization overflow every 500ms
+    // TIM2 initialization overflow every 1ms
     // TIM2 by default has clock of 84MHz
     // Here, we must set value of prescaler and period,
     // so update event is 0.5Hz or 500ms
@@ -82,17 +82,17 @@ void TIM2_IRQHandler()
 {
 	STM_EVAL_LEDOn(LED4);
 	//Mirem la flag
-    if (TIM_GetITStatus(TIM2, TIM_IT_Update))
-    {
-    	if(interrupts ==200){
-    		STM_EVAL_LEDToggle(LED3);
-    		interrupts = 0;
-    	}else{
-    		interrupts++;
-    	}
-        // Netejem la flag
-        TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-    }
+    //if (TIM_GetITStatus(TIM2, TIM_IT_Update))
+    //{
+	if(interrupts ==200){
+		STM_EVAL_LEDToggle(LED3);
+		interrupts = 0;
+	}else{
+		interrupts++;
+	}
+	// Netejem la flag
+	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+    //}
 }
 
 /**
@@ -129,11 +129,8 @@ int main(void)
   {
 
 	  if (STM_EVAL_PBGetState(BUTTON_USER)==1){
-		  STM_EVAL_LEDOn(LED3);
-		  STM_EVAL_LEDOn(LED4);
-	  }else{
-		  STM_EVAL_LEDOff(LED3);
-		  STM_EVAL_LEDOff(LED4);
+		  STM_EVAL_LEDToggle(LED3);
+		  STM_EVAL_LEDToggle(LED4);
 	  }
   }
 }
