@@ -96,7 +96,7 @@ void TIM_INT_Init()
 	// Update Event (Hz) = 84MHz / ((299+ 1) * (279+ 1)) = 1000 Hz
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T3;
 	TIM_TimeBaseInitStruct_T3.TIM_Prescaler = 0;
-	TIM_TimeBaseInitStruct_T3.TIM_Period = 300;
+	TIM_TimeBaseInitStruct_T3.TIM_Period = 42;
 	TIM_TimeBaseInitStruct_T3.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseInitStruct_T3.TIM_CounterMode = TIM_CounterMode_Up;
 
@@ -128,6 +128,7 @@ void TIM3_IRQHandler(){
     if(cycle >100){
 	    cycle = 0;
     }
+    TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 }
 
 void TIM2_IRQHandler() //RSI Timer2
