@@ -84,25 +84,37 @@ void TIM2_IRQHandler()
 	//Mirem la flag
     //if (TIM_GetITStatus(TIM2, TIM_IT_Update))
     //{
+	//LED
 	if(interrupts ==200){
 		STM_EVAL_LEDToggle(LED3);
 		interrupts = 0;
 	}else{
 		interrupts++;
 	}
-
+	//DUTY CYCLE PWM
+	if (wheelsOn == 1){
+		//TODO: HACER COSA
+	}else{
+		//TODO: HACER COSA
+	}
+	//ALGO MÁS QUE TENEMOS QUE PENSAR AÚN
 	// Netejem la flag
 	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
     //}
 }
 
-/**
-**===========================================================================
-**
-**  Abstract: main program
-**
-**===========================================================================
-*/
+
+void EXTI1_IRQHandler()
+{
+	// Netejem la flag
+    EXTI_ClearITPendingBit(EXTI_Line1);
+}
+void EXTI2_IRQHandler()
+{
+	// Netejem la flag
+    EXTI_ClearITPendingBit(EXTI_Line2);
+}
+
 void INIT_IO_PRACTICA_1(){
 	  //Outputs
 	  GPIO_InitTypeDef GPIO_InitStructure;
@@ -120,6 +132,45 @@ void INIT_IO_PRACTICA_1(){
 	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN ;
 	  GPIO_Init(GPIOD, &GPIO_InitStructure);
 
+	  //Configurem el interrupt dels sensors.
+
+	  /*******************
+	   * SENSOR DEL PD01 *
+	   *******************/
+	  EXTI_InitTypeDef EXTI_InitStruct;
+	  SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOD, EXTI_PinSource1);
+	  EXTI_InitStruct.EXTI_Line = EXTI_Line1;
+	  EXTI_InitStruct.EXTI_LineCmd = ENABLE;
+	  EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
+	  EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Rising;
+	  EXTI_Init(&EXTI_InitStruct);
+
+ 	  /* Add IRQ vector to NVIC */
+	  //Prioritat a 1 al vector
+	  NVIC_InitTypeDef NVIC_InitStruct;
+	  NVIC_InitStruct.NVIC_IRQChannel = EXTI1_IRQn;
+	  NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x01;
+	  NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x01;
+	  NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+	  NVIC_Init(&NVIC_InitStruct);
+	  /*******************
+	   * SENSOR DEL PD02 *
+	   *******************/
+
+	  SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOD, EXTI_PinSource2);
+	  EXTI_InitStruct.EXTI_Line = EXTI_Line2;
+	  EXTI_InitStruct.EXTI_LineCmd = ENABLE;
+	  EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
+	  EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Rising;
+	  EXTI_Init(&EXTI_InitStruct);
+
+ 	  /* Add IRQ vector to NVIC */
+	  //Prioritat a 1 al vector
+	  NVIC_InitStruct.NVIC_IRQChannel = EXTI2_IRQn;
+	  NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x02;
+	  NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x02;
+	  NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+	  NVIC_Init(&NVIC_InitStruct);
 }
 
 int main(void)
