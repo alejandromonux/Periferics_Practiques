@@ -110,7 +110,7 @@ void TIM2_IRQHandler()
 /***
  * intIndex: 0 si EXTI1, 1 si EXTI2
  */
-//TODO: CAMBIAR EL OUTPUT A CHAR SI NECESITAMOS OPTIMIZAR
+
 #define MAXINTVALUE 20
 int getRevs(char intIndex){
 	if (periodMS[intIndex] == -1){
