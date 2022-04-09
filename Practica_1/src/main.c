@@ -70,7 +70,7 @@ void TIM_INT_Init()
     // Nested vectored interrupt settings
     // TIM2 interrupt is most important (PreemptionPriority and
     // SubPriority = 0)
-    NVIC_InitTypeDef NVIC_InitStruc	t;
+    NVIC_InitTypeDef NVIC_InitStruct;
     NVIC_InitStruct.NVIC_IRQChannel = TIM2_IRQn;
     NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
     NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
@@ -80,11 +80,13 @@ void TIM_INT_Init()
 
 void TIM2_IRQHandler()
 {
+	STM_EVAL_LEDOn(LED4);
 	//Mirem la flag
     if (TIM_GetITStatus(TIM2, TIM_IT_Update))
     {
-    	if(interrupts ==250){
+    	if(interrupts ==200){
     		STM_EVAL_LEDToggle(LED3);
+    		interrupts = 0;
     	}else{
     		interrupts++;
     	}
