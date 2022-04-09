@@ -37,8 +37,11 @@ static char interrupts;
 char wheelsOn;
 unsigned int miliseconds; //Used for the time calculation
 int periodMS[2];
-int duty_cycle = 50; //valor entre 0 y 100%
+int duty_cycle1 = 50; //valor entre 0 y 100%
+int duty_cycle2 = 50; //valor entre 0 y 100%
 int cycle = 0; //No se me ocurre como hacerlo ahora mismo
+char state1 = 0;
+char state2 = 0;
 /* Private function prototypes */
 /* Private functions */
 
@@ -119,11 +122,20 @@ void TIM_INT_Init()
 }
 
 void TIM3_IRQHandler(){
-	if(cycle==0){
-	    GPIO_ToggleBits(GPIOD, GPIO_Pin_3);
-    }else if(cycle == duty_cycle){
-	    GPIO_ToggleBits(GPIOD, GPIO_Pin_3);
+	if(cycle < duty_cycle1 && state1 == 0){
+	    GPIO_SetBits(GPIOD, GPIO_Pin_3);
+	    state1 = 1;
+    }else if(cycle >= duty_cycle1 && state1 == 1){
+	    GPIO_ResetBits(GPIOD, GPIO_Pin_3);
+	    state1 = 0;
     }
+	if(cycle < duty_cycle2 && state2 == 0){
+		GPIO_SetBits(GPIOD, GPIO_Pin_4);
+		state2 = 1;
+	}else if(cycle >= duty_cycle2 && state2 ==1){
+		GPIO_ResetBits(GPIOD, GPIO_Pin_4);
+		state2 = 0;
+	}
     cycle++;
     if(cycle >100){
 	    cycle = 0;
@@ -146,9 +158,11 @@ void TIM2_IRQHandler() //RSI Timer2
 	}
 	//DUTY CYCLE PWM
 	if (wheelsOn == 1){
-		//TODO: HACER COSA
+		duty_cycle1 = 100;
+		duty_cycle2 = 100;
 	}else{
-		//TODO: HACER LA COSA BONA
+		duty_cycle1 = 50;
+		duty_cycle2 = 50;
 	}
 	//ALGO MÁS QUE TENEMOS QUE PENSAR AÚN
 	// Netejem la flag
@@ -282,6 +296,7 @@ int main(void)
 
 	  if (STM_EVAL_PBGetState(BUTTON_USER)==1){
 		  wheelsOn = 1-wheelsOn;
+		  while(STM_EVAL_PBGetState(BUTTON_USER)==1){}
 	  }
   }
 }
