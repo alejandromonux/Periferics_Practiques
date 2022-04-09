@@ -37,6 +37,8 @@ static char interrupts;
 char wheelsOn;
 unsigned int miliseconds; //Used for the time calculation
 int periodMS[2];
+int duty_cycle = 50; //valor entre 0 y 100%
+int cycle = 0; //No se me ocurre como hacerlo ahora mismo
 /* Private function prototypes */
 /* Private functions */
 
@@ -79,9 +81,56 @@ void TIM_INT_Init()
     NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStruct);
+
+
+
+
+	// Enable clock for TIM4
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+
+	// TIM4 initialization overflow every 1ms
+	// TIM4 by default has clock of 84MHz
+	// Here, we must set value of prescaler and period,
+	// so update event is 0.5Hz or 500ms
+	// Update Event (Hz) = timer_clock / ((TIM_Prescaler + 1) *  (TIM_Period + 1))
+	// Update Event (Hz) = 84MHz / ((299+ 1) * (279+ 1)) = 1000 Hz
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T3;
+	TIM_TimeBaseInitStruct_T3.TIM_Prescaler = 0;
+	TIM_TimeBaseInitStruct_T3.TIM_Period = 300;
+	TIM_TimeBaseInitStruct_T3.TIM_ClockDivision = TIM_CKD_DIV1;
+	TIM_TimeBaseInitStruct_T3.TIM_CounterMode = TIM_CounterMode_Up;
+
+	// TIM2 initialize
+	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStruct_T3);
+	// Enable TIM2 interrupt
+	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
+	// Start TIM2
+	TIM_Cmd(TIM3, ENABLE);
+
+	// Nested vectored interrupt settings
+	// TIM4 interrupt is most important (PreemptionPriority and
+	// SubPriority = 0)
+	NVIC_InitTypeDef NVIC_InitStruct_T3;
+	NVIC_InitStruct_T3.NVIC_IRQChannel = TIM3_IRQn;
+	NVIC_InitStruct_T3.NVIC_IRQChannelPreemptionPriority = 0X01;
+	NVIC_InitStruct_T3.NVIC_IRQChannelSubPriority = 0X01;
+	NVIC_InitStruct_T3.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStruct_T3);
 }
 
-void TIM2_IRQHandler()
+void TIM3_IRQHandler(){
+	if(cycle==0){
+	    GPIO_ToggleBits(GPIOD, GPIO_Pin_3);
+    }else if(cycle == duty_cycle){
+	    GPIO_ToggleBits(GPIOD, GPIO_Pin_3);
+    }
+    cycle++;
+    if(cycle >100){
+	    cycle = 0;
+    }
+}
+
+void TIM2_IRQHandler() //RSI Timer2
 {
 	miliseconds++;
 	//Mirem la flag
@@ -98,7 +147,7 @@ void TIM2_IRQHandler()
 	if (wheelsOn == 1){
 		//TODO: HACER COSA
 	}else{
-		//TODO: HACER COSA
+		//TODO: HACER LA COSA BONA
 	}
 	//ALGO MÁS QUE TENEMOS QUE PENSAR AÚN
 	// Netejem la flag
@@ -177,8 +226,8 @@ void INIT_IO_PRACTICA_1(){
 	  //Prioritat a 1 al vector
 	  NVIC_InitTypeDef NVIC_InitStruct;
 	  NVIC_InitStruct.NVIC_IRQChannel = EXTI1_IRQn;
-	  NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x01;
-	  NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x01;
+	  NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x04;
+	  NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x04;
 	  NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	  NVIC_Init(&NVIC_InitStruct);
 	  /*******************
@@ -195,8 +244,8 @@ void INIT_IO_PRACTICA_1(){
  	  /* Add IRQ vector to NVIC */
 	  //Prioritat a 1 al vector
 	  NVIC_InitStruct.NVIC_IRQChannel = EXTI2_IRQn;
-	  NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x02;
-	  NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x02;
+	  NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x05;
+	  NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x05;
 	  NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	  NVIC_Init(&NVIC_InitStruct);
 }
@@ -211,11 +260,11 @@ int main(void)
   /**
   *  IMPORTANT NOTE!
   *  The symbol VECT_TAB_SRAM needs to be defined when building the project
-  *  if code has been located to RAM and interrupts are used. 
+  *  if code has been located to RAM and interrupts are used.
   *  Otherwise the interrupt table located in flash will be used.
-  *  See also the <system_*.c> file and how the SystemInit() function updates 
-  *  SCB->VTOR register.  
-  *  E.g.  SCB->VTOR = 0x20000000;  
+  *  See also the <system_*.c> file and how the SystemInit() function updates
+  *  SCB->VTOR register.
+  *  E.g.  SCB->VTOR = 0x20000000;
   */
 
   /* TODO - Add your application code here */
