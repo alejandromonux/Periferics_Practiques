@@ -35,6 +35,8 @@ SOFTWARE.
 /* Private variables */
 static char interrupts;
 char wheelsOn;
+unsigned int miliseconds; //Used for the time calculation
+int periodMS[2];
 /* Private function prototypes */
 /* Private functions */
 
@@ -81,6 +83,7 @@ void TIM_INT_Init()
 
 void TIM2_IRQHandler()
 {
+	miliseconds++;
 	//Mirem la flag
     //if (TIM_GetITStatus(TIM2, TIM_IT_Update))
     //{
@@ -104,13 +107,37 @@ void TIM2_IRQHandler()
 }
 
 
+/***
+ * intIndex: 0 si EXTI1, 1 si EXTI2
+ */
+//TODO: CAMBIAR EL OUTPUT A CHAR SI NECESITAMOS OPTIMIZAR
+#define MAXINTVALUE 20
+int getRevs(char intIndex){
+	if (periodMS[intIndex] == -1){
+		periodMS[intIndex] = miliseconds;
+		return -1;
+	}else{
+		//TODO: controlar el overflow
+		if (miliseconds < periodMS[intIndex]){
+			periodMS[intIndex] = MAXINTVALUE - periodMS[intIndex] + miliseconds;
+		}else{
+			periodMS[intIndex] = miliseconds - periodMS[intIndex];
+		}
+		int output = (1/16*(periodMS[intIndex])); //Calculamos revoluciones
+		periodMS[intIndex] = -1;
+		return output;
+	}
+}
+
 void EXTI1_IRQHandler()
 {
+	int valueRoda1 = getRevs(0);
 	// Netejem la flag
     EXTI_ClearITPendingBit(EXTI_Line1);
 }
 void EXTI2_IRQHandler()
 {
+	int valueRoda2 = getRevs(1);
 	// Netejem la flag
     EXTI_ClearITPendingBit(EXTI_Line2);
 }
@@ -177,7 +204,9 @@ int main(void)
 {
 	interrupts = 0;
 	wheelsOn = 0;
-
+	miliseconds = 0;
+	periodMS[0]=-1;
+	periodMS[1]=-1;
   /**
   *  IMPORTANT NOTE!
   *  The symbol VECT_TAB_SRAM needs to be defined when building the project
