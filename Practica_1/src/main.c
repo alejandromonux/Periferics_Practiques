@@ -201,9 +201,10 @@ int getRevs(int intIndex){
 		}else{
 			periodMS[intIndex] = miliseconds - periodMS[intIndex];
 		}
-		int output = (1/16*(periodMS[intIndex])); //Calculamos revoluciones
-		periodMS[intIndex] = -1;
-		return output*1000;
+		float auxiliar = (1/(16*(periodMS[intIndex]/(float)1000)));
+		int output = (int)(auxiliar*1000); //Calculamos revoluciones
+		periodMS[intIndex] = miliseconds;
+		return output;
 	}
 }
 
@@ -222,6 +223,7 @@ void EXTI2_IRQHandler()
 
 void INIT_IO_PRACTICA_1(){
 	  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 	  //Outputs
 	  GPIO_InitTypeDef GPIO_InitStructure;
 	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6;
@@ -262,21 +264,22 @@ void INIT_IO_PRACTICA_1(){
 	  /*******************
 	   * SENSOR DEL PD02 *
 	   *******************/
-
+	  EXTI_InitTypeDef EXTI_InitStruct2;
 	  SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOD, EXTI_PinSource2);
-	  EXTI_InitStruct.EXTI_Line = EXTI_Line2;
-	  EXTI_InitStruct.EXTI_LineCmd = ENABLE;
-	  EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
-	  EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Rising;
-	  EXTI_Init(&EXTI_InitStruct);
+	  EXTI_InitStruct2.EXTI_Line = EXTI_Line2;
+	  EXTI_InitStruct2.EXTI_LineCmd = ENABLE;
+	  EXTI_InitStruct2.EXTI_Mode = EXTI_Mode_Interrupt;
+	  EXTI_InitStruct2.EXTI_Trigger = EXTI_Trigger_Rising;
+	  EXTI_Init(&EXTI_InitStruct2);
 
  	  /* Add IRQ vector to NVIC */
 	  //Prioritat a 1 al vector
-	  NVIC_InitStruct.NVIC_IRQChannel = EXTI2_IRQn;
-	  NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x05;
-	  NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x05;
-	  NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-	  NVIC_Init(&NVIC_InitStruct);
+	  NVIC_InitTypeDef NVIC_InitStruct2;
+	  NVIC_InitStruct2.NVIC_IRQChannel = EXTI2_IRQn;
+	  NVIC_InitStruct2.NVIC_IRQChannelPreemptionPriority = 0x05;
+	  NVIC_InitStruct2.NVIC_IRQChannelSubPriority = 0x05;
+	  NVIC_InitStruct2.NVIC_IRQChannelCmd = ENABLE;
+	  NVIC_Init(&NVIC_InitStruct2);
 }
 
 int main(void)
