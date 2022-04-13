@@ -42,6 +42,10 @@ int duty_cycle2 = 50; //valor entre 0 y 100%
 int cycle = 0; //No se me ocurre como hacerlo ahora mismo
 char state1 = 0;
 char state2 = 0;
+int velValue = 1000;
+int waitTo = 0;
+int counter = 0;
+int subclock = 0;
 /* Private function prototypes */
 /* Private functions */
 
@@ -140,16 +144,26 @@ void TIM3_IRQHandler(){
     if(cycle >100){
 	    cycle = 0;
     }
+
+    if(subclock>500){ //Counter de 1ms
+    	subclock = 0;
+    	if(waitTo == counter){
+    		GPIO_ToggleBits(GPIOD, GPIO_Pin_5);
+    		GPIO_ToggleBits(GPIOD, GPIO_Pin_6);
+    		counter = 0;
+    	}
+    	counter++;
+
+    }
+    subclock++;
+
     TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 }
 
 void TIM2_IRQHandler() //RSI Timer2
 {
 	miliseconds++;
-	//Mirem la flag
-    //if (TIM_GetITStatus(TIM2, TIM_IT_Update))
-    //{
-	//LED
+
 	if(interrupts ==200){
 		STM_EVAL_LEDToggle(LED3);
 		interrupts = 0;
@@ -189,7 +203,7 @@ int getRevs(int intIndex){
 		}
 		int output = (1/16*(periodMS[intIndex])); //Calculamos revoluciones
 		periodMS[intIndex] = -1;
-		return output;
+		return output*1000;
 	}
 }
 
@@ -267,6 +281,7 @@ void INIT_IO_PRACTICA_1(){
 
 int main(void)
 {
+	waitTo = 1000000/velValue;
 	interrupts = 0;
 	wheelsOn = 0;
 	miliseconds = 0;
