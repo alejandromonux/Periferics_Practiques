@@ -11,6 +11,7 @@ Authors:  Alejandro Moñux
 #include "stm32f4xx.h"
 #include "stm32f429i_discovery.h"
 
+#define MAXINTVALUE 4294967295
 /* variables */
 static char interrupts;
 char wheelsOn;
@@ -27,12 +28,14 @@ int counter = 0;
 int subclock = 0;
 
 
-/*
- *
- *TIMER
- *CONFIG
- *
- */
+/**
+* Name: TIM_INT_Init
+* Description: Initialises the timers
+* Params:
+*  -
+* Returns:
+*  -
+**/
 void TIM_INT_Init()
 {
     // Enable clock for TIM2
@@ -94,6 +97,14 @@ void TIM_INT_Init()
 	NVIC_Init(&NVIC_InitStruct_T3);
 }
 
+/**
+* Name: TIM3_IRQHandler
+* Description: Handles the Timer 3 Interrupt
+* Params:
+*  -
+* Returns:
+*  -
+**/
 void TIM3_IRQHandler(){
 	if(cycle < duty_cycle1 && state1 == 0){
 	    GPIO_SetBits(GPIOD, GPIO_Pin_3);
@@ -129,6 +140,14 @@ void TIM3_IRQHandler(){
     TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 }
 
+/**
+* Name: TIM2_IRQHandler
+* Description: Handles the Timer 2 Interrupt
+* Params:
+*  -
+* Returns:
+*  -
+**/
 void TIM2_IRQHandler() //RSI Timer2
 {
 	miliseconds++;
@@ -154,11 +173,16 @@ void TIM2_IRQHandler() //RSI Timer2
 }
 
 
-/***
- * intIndex: 0 si EXTI1, 1 si EXTI2
- */
 
-#define MAXINTVALUE 4294967295
+
+/**
+* Name: getRevs
+* Description: Calculates the revolutions
+* Params:
+*  -intIndex: index, indicates 0 si EXTI1, 1 si EXTI2
+* Returns:
+*  -int, revolutions
+**/
 int getRevs(int intIndex){
 	if (periodMS[intIndex] == -1){
 		periodMS[intIndex] = miliseconds;
@@ -177,12 +201,25 @@ int getRevs(int intIndex){
 	}
 }
 
+/**
+* Name: EXTI1_IRQHandler
+* Description: Handles the External Interrupt 1
+* Params: -
+* Returns: -
+**/
 void EXTI1_IRQHandler()
 {
 	int valueRoda1 = getRevs(0);
 	// Netejem la flag
     EXTI_ClearITPendingBit(EXTI_Line1);
 }
+
+/**
+* Name: EXTI2_IRQHandler
+* Description: Handles the External Interrupt 2
+* Params: -
+* Returns: -
+**/
 void EXTI2_IRQHandler()
 {
 	int valueRoda2 = getRevs(1);
@@ -190,6 +227,12 @@ void EXTI2_IRQHandler()
     EXTI_ClearITPendingBit(EXTI_Line2);
 }
 
+/**
+* Name: INIT_IO_PRACTICA_1
+* Description: Initializes all ports and peripherals except for Timers
+* Params: -
+* Returns: -
+**/
 void INIT_IO_PRACTICA_1(){
 	  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
