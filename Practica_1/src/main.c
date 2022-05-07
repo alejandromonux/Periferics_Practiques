@@ -11,7 +11,10 @@ Authors:  Alejandro Moñux
 #include "stm32f4xx.h"
 #include "stm32f429i_discovery.h"
 
-#define MAXINTVALUE 4294967295
+#define MAXINTVALUE 	4294967295
+#define COMANDA_INIT 	0xA5
+#define STARTSCAN_VALUE 0x60
+#define STARTSCAN_MACRO {0xA5,0x60}
 /* variables */
 static char interrupts;
 char wheelsOn;
@@ -26,7 +29,7 @@ int velValue = 1000;
 int waitTo = 0;
 int counter = 0;
 int subclock = 0;
-
+int startPulsado =0;
 
 /**
 * Name: TIM_INT_Init
@@ -166,7 +169,14 @@ void TIM2_IRQHandler() //RSI Timer2
 		duty_cycle1 = 50;
 		duty_cycle2 = 50;
 	}
-	//ALGO M�S QUE TENEMOS QUE PENSAR A�N
+    if ((GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_7))&&(startPulsado==0)){
+    	//TODO: Enviar por la USART
+    	USART_SendData(USART2, COMANDA_INIT);
+    	while(USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET){}
+    	USART_SendData(USART2, STARTSCAN_VALUE);
+    	startPulsado = 1;
+    }
+
 	// Netejem la flag
 	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
     //}
@@ -245,7 +255,7 @@ void INIT_IO_PRACTICA_1(){
 	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL; //FIXME: Si no va poner pullup
 	  GPIO_Init(GPIOD, &GPIO_InitStructure);
 	  //INPUTS
-	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_2;
+	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_7;
 	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
@@ -300,6 +310,7 @@ int main(void)
 	interrupts = 0;
 	wheelsOn = 0;
 	miliseconds = 0;
+	startPulsado = 0;
 	periodMS[0]=-1;
 	periodMS[1]=-1;
 
