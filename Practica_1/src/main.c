@@ -171,9 +171,10 @@ void TIM2_IRQHandler() //RSI Timer2
 	}
     if ((GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_7))&&(startPulsado==0)){
     	//TODO: Enviar por la USART
-    	USART_SendData(USART2, COMANDA_INIT);
-    	while(USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET){}
+    	USART_SendData(USART2, 'A'/*COMANDA_INIT*/);
+    	while(USART_GetFlagStatus(USART2, USART_FLAG_TXE)){}
     	USART_SendData(USART2, STARTSCAN_VALUE);
+		STM_EVAL_LEDOn(LED4);
     	startPulsado = 1;
     }
 
@@ -303,20 +304,41 @@ void INIT_IO_PRACTICA_1(){
 	  NVIC_InitStruct2.NVIC_IRQChannelCmd = ENABLE;
 	  NVIC_Init(&NVIC_InitStruct2);
 
+
 }
 
 void INIT_USART(void){
 	USART_InitTypeDef USART_InitStructure;
+	GPIO_InitTypeDef GPIO_InitStructure;
 
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA,ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2,ENABLE);
 
-	USART_InitStructure.USART_BaudRate = 115200;
+
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2  ;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+	GPIO_PinAFConfig(GPIOA,GPIO_PinSource2,GPIO_AF_USART2);
+	GPIO_PinAFConfig(GPIOA,GPIO_PinSource3,GPIO_AF_USART2);
+
+
+	USART_InitStructure.USART_BaudRate = 128000;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 	USART_Init(USART2, &USART_InitStructure);
+	USART_Cmd(USART2, ENABLE);
 }
 
 int main(void)
@@ -332,6 +354,8 @@ int main(void)
   INIT_IO_PRACTICA_1();
   STM_EVAL_LEDInit(LED3);
   STM_EVAL_LEDInit(LED4);
+  INIT_USART();
+
   //Configurar el bot�n
   STM_EVAL_PBInit(BUTTON_USER,BUTTON_MODE_GPIO);
   //Configurar el timer
@@ -344,6 +368,11 @@ int main(void)
 		  wheelsOn = 1-wheelsOn;
 		  while(STM_EVAL_PBGetState(BUTTON_USER)==1){}
 	  }
+	if(USART_GetFlagStatus(USART2,USART_IT_RXNE)==RESET)
+	{
+		uint16_t ucTemp = USART_ReceiveData( USART2 );
+		USART_SendData(USART2,ucTemp);
+	}
   }
 }
 
