@@ -315,23 +315,17 @@ void INIT_USART(void){
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2,ENABLE);
 
 
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2  ;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-
 	GPIO_PinAFConfig(GPIOA,GPIO_PinSource2,GPIO_AF_USART2);
 	GPIO_PinAFConfig(GPIOA,GPIO_PinSource3,GPIO_AF_USART2);
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_3;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
 
-	USART_InitStructure.USART_BaudRate = 128000;
+	USART_InitStructure.USART_BaudRate = /*128000*/ 9600;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -368,10 +362,12 @@ int main(void)
 		  wheelsOn = 1-wheelsOn;
 		  while(STM_EVAL_PBGetState(BUTTON_USER)==1){}
 	  }
-	if(USART_GetFlagStatus(USART2,USART_IT_RXNE)==RESET)
+
+	  if(USART_GetFlagStatus(USART2,USART_IT_RXNE)==SET)
 	{
 		uint16_t ucTemp = USART_ReceiveData( USART2 );
 		USART_SendData(USART2,ucTemp);
+		STM_EVAL_LEDToggle(LED4);
 	}
   }
 }
