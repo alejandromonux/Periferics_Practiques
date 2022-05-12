@@ -8,8 +8,9 @@ Authors:  Alejandro Moñux
 */
 
 /* Includes */
-#include "stm32f4xx.h"
-#include "stm32f429i_discovery.h"
+//#include "stm32f4xx.h"
+//#include "stm32f429i_discovery.h"
+#include <DMA_usart_config.h>
 
 #define MAXINTVALUE 	4294967295
 #define COMANDA_INIT 	0xA5
@@ -171,9 +172,9 @@ void TIM2_IRQHandler() //RSI Timer2
 	}
     if ((GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_7))&&(startPulsado==0)){
     	//TODO: Enviar por la USART
-    	USART_SendData(USART2, 'A'/*COMANDA_INIT*/);
-    	while(USART_GetFlagStatus(USART2, USART_FLAG_TXE)){}
-    	USART_SendData(USART2, STARTSCAN_VALUE);
+    	USART_SendData(USART1, COMANDA_INIT);
+    	while(USART_GetFlagStatus(USART1, USART_FLAG_TXE)){}
+    	USART_SendData(USART1, STARTSCAN_VALUE);
 		STM_EVAL_LEDOn(LED4);
     	startPulsado = 1;
     }
@@ -370,6 +371,7 @@ int main(void)
 		USART_SendData(USART1,ucTemp);
 		STM_EVAL_LEDToggle(LED4);
 	}
+	 /*Codi de que si comencem a rebre llegim les tres primeres i despres tirem la config de la DMA*/
   }
 }
 
