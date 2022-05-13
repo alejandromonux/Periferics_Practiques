@@ -13,7 +13,7 @@ void configUsart(int dataAmount){
 	DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)&UsartIncomingThingies[0];
 	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
 	DMA_InitStructure.DMA_BufferSize = 2;
-	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Enable;
+	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
 	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
@@ -24,7 +24,7 @@ void configUsart(int dataAmount){
 	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
 	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	DMA_Init(DMA2_Stream5, &DMA_InitStructure);
-	DMA_DoubleBufferModeConfig(DMA2_Stream5,(uint32_t)&UsartIncomingThingies[2],DMA_Memory_0);
+	DMA_DoubleBufferModeConfig(DMA2_Stream5,(uint32_t)&UsartIncomingThingies2[0],DMA_Memory_0);
 	USART_DMACmd(USART1,USART_DMAReq_Rx,ENABLE);
 	DMA_DoubleBufferModeCmd(DMA2_Stream5,ENABLE);
 	DMA_Cmd(DMA2_Stream5,ENABLE);
