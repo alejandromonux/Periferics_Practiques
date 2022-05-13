@@ -13,14 +13,14 @@ Authors:  Alejandro MoÃ±ux
 #include <DMA_usart_config.h>
 
 #define MAXINTVALUE 	4294967295
-#define TIME_MAGNITUTE_DENOMINATOR 1000
+#define TIME_MAGNITUTE_DENOMINATOR 1000000
 #define COMANDA_INIT 	0xA5
 #define STARTSCAN_VALUE 0x60
 #define STARTSCAN_MACRO {0xA5,0x60}
 /* variables */
 static char interrupts;
 char wheelsOn;
-unsigned int miliseconds; //Used for the time calculation
+unsigned int miliseconds; //Used for the time calculation. THEY ACTUALLY ARE MICROSECONDS
 int periodMS[2];
 int duty_cycle1 = 50; //valor entre 0 y 100%
 int duty_cycle2 = 50; //valor entre 0 y 100%
@@ -100,8 +100,39 @@ void TIM_INT_Init()
 	NVIC_InitStruct_T3.NVIC_IRQChannelSubPriority = 0X01;
 	NVIC_InitStruct_T3.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStruct_T3);
-}
 
+
+	//Timer per comptar els microsegons entre els flancs de pujada
+	  // default clock 84MHz
+	  // Update Event = timer_clock / ((Prescaler + 1) *  (Period + 1))
+		// Update Event (Hz) = 84MHz / ((5+ 1) * (13+ 1)) = 1 MHz
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T4;
+	TIM_TimeBaseInitStruct_T4.TIM_Prescaler = 5;
+	TIM_TimeBaseInitStruct_T4.TIM_Period = 13;
+	TIM_TimeBaseInitStruct_T4.TIM_ClockDivision = TIM_CKD_DIV1;
+	TIM_TimeBaseInitStruct_T4.TIM_CounterMode = TIM_CounterMode_Up;
+
+	// TIM initialize
+	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseInitStruct_T4);
+	// Enable TIM interrupt
+	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
+	// Start TIM
+	TIM_Cmd(TIM4, ENABLE);
+
+	//interrupt settings
+	NVIC_InitTypeDef NVIC_InitStruct_T4;
+	NVIC_InitStruct_T4.NVIC_IRQChannel = TIM4_IRQn;
+	NVIC_InitStruct_T4.NVIC_IRQChannelPreemptionPriority = 0X00;
+	NVIC_InitStruct_T4.NVIC_IRQChannelSubPriority = 0X03;
+	NVIC_InitStruct_T4.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStruct_T4);
+}
+void TIM4_IRQHandler(){
+	miliseconds++;
+    TIM_ClearITPendingBit(TIM4, TIM_IT_Update);
+}
 /**
 * Name: TIM3_IRQHandler
 * Description: Handles the Timer 3 Interrupt
@@ -155,7 +186,7 @@ void TIM3_IRQHandler(){
 **/
 void TIM2_IRQHandler() //RSI Timer2
 {
-	miliseconds++;
+	//miliseconds++;
 
 	if(interrupts ==200){
 		STM_EVAL_LEDToggle(LED3);
@@ -209,7 +240,8 @@ int getRevs(int intIndex){
 			periodMS[intIndex] = miliseconds - periodMS[intIndex];
 		}
 		float auxiliar = (1/(16*(periodMS[intIndex]/(float)TIME_MAGNITUTE_DENOMINATOR)));
-		int output = (int)(auxiliar*1000); //Calculem revolucions
+		int output = (int)auxiliar; //(int)(auxiliar*1000); //Calculem revolucions
+		//Lo anterior lo hemos puesto sin el *1000 porque ya sale un num lógico, digamos. Antes la resolución era de ms y ahora es de us
 		periodMS[intIndex] = miliseconds;
 		return output;
 	}
