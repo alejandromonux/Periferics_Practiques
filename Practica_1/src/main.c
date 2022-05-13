@@ -13,6 +13,7 @@ Authors:  Alejandro Moñux
 #include <DMA_usart_config.h>
 
 #define MAXINTVALUE 	4294967295
+#define TIME_MAGNITUTE_DENOMINATOR 1000
 #define COMANDA_INIT 	0xA5
 #define STARTSCAN_VALUE 0x60
 #define STARTSCAN_MACRO {0xA5,0x60}
@@ -176,6 +177,7 @@ void TIM2_IRQHandler() //RSI Timer2
     	while(USART_GetFlagStatus(USART1, USART_FLAG_TXE)){}
     	USART_SendData(USART1, STARTSCAN_VALUE);
 		STM_EVAL_LEDOn(LED4);
+		configUsart(0);
     	startPulsado = 1;
     }
 
@@ -206,7 +208,7 @@ int getRevs(int intIndex){
 		}else{
 			periodMS[intIndex] = miliseconds - periodMS[intIndex];
 		}
-		float auxiliar = (1/(16*(periodMS[intIndex]/(float)1000)));
+		float auxiliar = (1/(16*(periodMS[intIndex]/(float)TIME_MAGNITUTE_DENOMINATOR)));
 		int output = (int)(auxiliar*1000); //Calculem revolucions
 		periodMS[intIndex] = miliseconds;
 		return output;
@@ -364,13 +366,14 @@ int main(void)
 		  wheelsOn = 1-wheelsOn;
 		  while(STM_EVAL_PBGetState(BUTTON_USER)==1){}
 	  }
-
+	  /*
 	  if(USART_GetFlagStatus(USART1,USART_IT_RXNE)==SET)
 	{
 		uint16_t ucTemp = USART_ReceiveData(USART1);
 		USART_SendData(USART1,ucTemp);
 		STM_EVAL_LEDToggle(LED4);
-	}
+	}*/
+
 	 /*Codi de que si comencem a rebre llegim les tres primeres i despres tirem la config de la DMA*/
   }
 }
