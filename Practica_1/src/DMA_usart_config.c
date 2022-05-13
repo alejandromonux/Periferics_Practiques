@@ -27,7 +27,8 @@ void configUsart(int dataAmount){
 	DMA_DoubleBufferModeConfig(DMA2_Stream5,(uint32_t)&UsartIncomingThingies2[0],DMA_Memory_0);
 	USART_DMACmd(USART1,USART_DMAReq_Rx,ENABLE);
 	DMA_DoubleBufferModeCmd(DMA2_Stream5,ENABLE);
-	DMA_Cmd(DMA2_Stream5,ENABLE);
+
+
 	/*Interrupción del RX*/
 	//interrupt settings
 	NVIC_InitTypeDef NVIC_InitStruct;
@@ -37,8 +38,8 @@ void configUsart(int dataAmount){
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStruct);
 	/*Enable de la DMA con USART*/
-
 	DMA_ITConfig(DMA2_Stream5,DMA_IT_TC,ENABLE);
+	DMA_Cmd(DMA2_Stream5,ENABLE);
 
 	/* CONFIGURACIÓN PARA EL TX (STREAM 7) */
 
@@ -50,6 +51,6 @@ void DMA2_Stream5_IRQHandler()
 {
 	STM_EVAL_LEDToggle(LED4);
 	// Netejem la flag
-	DMA_ClearFlag(DMA2_Stream5, DMA_FLAG_TCIF0);
-	DMA_ClearITPendingBit(DMA2_Stream5, DMA_IT_TCIF0);
+	DMA_ClearFlag(DMA2_Stream5, DMA_FLAG_TCIF5);
+	DMA_ClearITPendingBit(DMA2_Stream5, DMA_IT_TCIF5);
 }
