@@ -28,14 +28,19 @@ SOFTWARE.
 */
 
 /* Includes */
-#include "stm32f4xx.h"
-#include "stm32f429i_discovery.h"
+//#include "stm32f4xx.h"
+//#include "stm32f429i_discovery.h"
+#include <DMA_usart_config.h>
 
-/* Private macro */
-/* Private variables */
+#define MAXINTVALUE 	4294967295
+#define TIME_MAGNITUTE_DENOMINATOR 1000000
+#define COMANDA_INIT 	0xA5
+#define STARTSCAN_VALUE 0x60
+#define STARTSCAN_MACRO {0xA5,0x60}
+/* variables */
 static char interrupts;
 char wheelsOn;
-unsigned int miliseconds; //Used for the time calculation
+unsigned int miliseconds; //Used for the time calculation. THEY ACTUALLY ARE MICROSECONDS
 int periodMS[2];
 int duty_cycle1 = 50; //valor entre 0 y 100%
 int duty_cycle2 = 50; //valor entre 0 y 100%
@@ -187,7 +192,7 @@ void TIM4_IRQHandler(){ //Tras leer el enunciado no creo que esto es lo que se t
 
 void TIM2_IRQHandler() //RSI Timer2
 {
-	miliseconds++;
+	//miliseconds++;
 
 	if(interrupts ==200){
 		STM_EVAL_LEDToggle(LED3);
@@ -203,7 +208,16 @@ void TIM2_IRQHandler() //RSI Timer2
 		duty_cycle1 = 50;
 		duty_cycle2 = 50;
 	}
-	//ALGO MÁS QUE TENEMOS QUE PENSAR AÚN
+    if ((GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_7))&&(startPulsado==0)){
+    	//TODO: Enviar por la USART
+    	USART_SendData(USART1, COMANDA_INIT);
+    	while(USART_GetFlagStatus(USART1, USART_FLAG_TXE)){}
+    	USART_SendData(USART1, STARTSCAN_VALUE);
+		STM_EVAL_LEDOn(LED4);
+		configUsart(0);
+    	startPulsado = 1;
+    }
+
 	// Netejem la flag
 	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
     //}
@@ -226,9 +240,11 @@ int getRevs(int intIndex){
 		}else{
 			periodMS[intIndex] = miliseconds - periodMS[intIndex];
 		}
-		int output = (1/16*(periodMS[intIndex])); //Calculamos revoluciones
-		periodMS[intIndex] = -1;
-		return output*1000;
+		float auxiliar = (1/(16*(periodMS[intIndex]/(float)TIME_MAGNITUTE_DENOMINATOR)));
+		int output = (int)auxiliar; //(int)(auxiliar*1000); //Calculem revolucions
+		//Lo anterior lo hemos puesto sin el *1000 porque ya sale un num lï¿½gico, digamos. Antes la resoluciï¿½n era de ms y ahora es de us
+		periodMS[intIndex] = miliseconds;
+		return output;
 	}
 }
 
@@ -297,11 +313,43 @@ void INIT_IO_PRACTICA_1(){
 
  	  /* Add IRQ vector to NVIC */
 	  //Prioritat a 1 al vector
-	  NVIC_InitStruct.NVIC_IRQChannel = EXTI2_IRQn;
-	  NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x05;
-	  NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x05;
-	  NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-	  NVIC_Init(&NVIC_InitStruct);
+	  NVIC_InitTypeDef NVIC_InitStruct2;
+	  NVIC_InitStruct2.NVIC_IRQChannel = EXTI2_IRQn;
+	  NVIC_InitStruct2.NVIC_IRQChannelPreemptionPriority = 0x05;
+	  NVIC_InitStruct2.NVIC_IRQChannelSubPriority = 0x05;
+	  NVIC_InitStruct2.NVIC_IRQChannelCmd = ENABLE;
+	  NVIC_Init(&NVIC_InitStruct2);
+
+
+}
+
+void INIT_USART(void){
+	USART_InitTypeDef USART_InitStructure;
+	GPIO_InitTypeDef GPIO_InitStructure;
+
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA,ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1,ENABLE);
+
+
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_10;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+	GPIO_PinAFConfig(GPIOA,GPIO_PinSource9,GPIO_AF_USART1);
+	GPIO_PinAFConfig(GPIOA,GPIO_PinSource10,GPIO_AF_USART1);
+
+
+	USART_InitStructure.USART_BaudRate = /*128000*/ 9600;
+	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+	USART_InitStructure.USART_StopBits = USART_StopBits_1;
+	USART_InitStructure.USART_Parity = USART_Parity_No;
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+	USART_Init(USART1, &USART_InitStructure);
+	USART_Cmd(USART1, ENABLE);
 }
 
 int main(void)
@@ -326,7 +374,9 @@ int main(void)
   INIT_IO_PRACTICA_1();
   STM_EVAL_LEDInit(LED3);
   STM_EVAL_LEDInit(LED4);
-  //Configurar el botón
+  INIT_USART();
+
+  //Configurar el botï¿½n
   STM_EVAL_PBInit(BUTTON_USER,BUTTON_MODE_GPIO);
   //Configurar el timer
   TIM_INT_Init();
@@ -338,6 +388,15 @@ int main(void)
 		  wheelsOn = 1-wheelsOn;
 		  while(STM_EVAL_PBGetState(BUTTON_USER)==1){}
 	  }
+	  /*
+	  if(USART_GetFlagStatus(USART1,USART_IT_RXNE)==SET)
+	{
+		uint16_t ucTemp = USART_ReceiveData(USART1);
+		USART_SendData(USART1,ucTemp);
+		STM_EVAL_LEDToggle(LED4);
+	}*/
+
+	 /*Codi de que si comencem a rebre llegim les tres primeres i despres tirem la config de la DMA*/
   }
 }
 
