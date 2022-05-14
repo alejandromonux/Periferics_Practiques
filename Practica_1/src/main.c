@@ -145,11 +145,11 @@ void TIM_INT_Init()
   //Timer per comptar els microsegons entre els flancs de pujada
 	  // default clock 84MHz
 	  // Update Event = timer_clock / ((Prescaler + 1) *  (Period + 1))
-		// Update Event (Hz) = 42MHz / ((5+ 1) * (13+ 1)) = 1 MHz
+		// Update Event (Hz) = 42MHz / ((2+ 1) * (13+ 1)) = 1 MHz
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
 
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T5;
-	TIM_TimeBaseInitStruct_T5.TIM_Prescaler = 5;
+	TIM_TimeBaseInitStruct_T5.TIM_Prescaler = 2;
 	TIM_TimeBaseInitStruct_T5.TIM_Period = 13;
 	TIM_TimeBaseInitStruct_T5.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseInitStruct_T5.TIM_CounterMode = TIM_CounterMode_Up;
