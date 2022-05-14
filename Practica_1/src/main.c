@@ -85,15 +85,18 @@ void TIM_INT_Init()
 	// Here, we must set value of prescaler and period,
 	// so update event is 0.5Hz or 500ms
 	// Update Event (Hz) = timer_clock / ((TIM_Prescaler + 1) *  (TIM_Period + 1))
-	// Update Event (Hz) = 84MHz / ((299+ 1) * (279+ 1)) = 1000 Hz
+	// Update Event (Hz) = 42MHz / ((20+ 1) * (0+ 1)) = 2MHz
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T3;
-	TIM_TimeBaseInitStruct_T3.TIM_Prescaler = 20;
-	TIM_TimeBaseInitStruct_T3.TIM_Period = 0;
+	TIM_TimeBaseInitStruct_T3.TIM_Prescaler = 0;
+	TIM_TimeBaseInitStruct_T3.TIM_Period = 1;
 	TIM_TimeBaseInitStruct_T3.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseInitStruct_T3.TIM_CounterMode = TIM_CounterMode_Up;
+    TIM_TimeBaseInitStruct.TIM_RepetitionCounter = 0;
 
 	// TIM2 initialize
 	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStruct_T3);
+
+
 	// Enable TIM2 interrupt
 	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
 	// Start TIM2
@@ -109,10 +112,10 @@ void TIM_INT_Init()
 	NVIC_InitStruct_T3.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStruct_T3);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
-
 	// TIM4 initialization overflow every 1ms
 	// TIM4 by default has clock of 84MHz
 	// Here, we must set value of prescaler and period,
@@ -126,7 +129,7 @@ void TIM_INT_Init()
 	TIM_TimeBaseInitStruct_T4.TIM_CounterMode = TIM_CounterMode_Up;
 
 	// TIM2 initialize
-	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStruct_T4);
+	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseInitStruct_T4);
 	// Enable TIM2 interrupt
 	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
 	// Start TIM2
@@ -177,7 +180,6 @@ void TIM5_IRQHandler(){
 }
 
 void TIM3_IRQHandler(){
-
 	if(cycle == 0 || cycle == duty_cycle1){
 		if(cycle < duty_cycle1 && GPIO_ReadOutputDataBit(GPIOD, GPIO_Pin_3) == 1){
 			GPIO_ToggleBits(GPIOD, GPIO_Pin_3);
