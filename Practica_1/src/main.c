@@ -106,32 +106,32 @@ void TIM_INT_Init()
 	  // default clock 84MHz
 	  // Update Event = timer_clock / ((Prescaler + 1) *  (Period + 1))
 		// Update Event (Hz) = 84MHz / ((5+ 1) * (13+ 1)) = 1 MHz
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
 
-	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T4;
-	TIM_TimeBaseInitStruct_T4.TIM_Prescaler = 5;
-	TIM_TimeBaseInitStruct_T4.TIM_Period = 13;
-	TIM_TimeBaseInitStruct_T4.TIM_ClockDivision = TIM_CKD_DIV1;
-	TIM_TimeBaseInitStruct_T4.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T5;
+	TIM_TimeBaseInitStruct_T5.TIM_Prescaler = 5;
+	TIM_TimeBaseInitStruct_T5.TIM_Period = 13;
+	TIM_TimeBaseInitStruct_T5.TIM_ClockDivision = TIM_CKD_DIV1;
+	TIM_TimeBaseInitStruct_T5.TIM_CounterMode = TIM_CounterMode_Up;
 
 	// TIM initialize
-	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseInitStruct_T4);
+	TIM_TimeBaseInit(TIM5, &TIM_TimeBaseInitStruct_T5);
 	// Enable TIM interrupt
-	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
+	TIM_ITConfig(TIM5, TIM_IT_Update, ENABLE);
 	// Start TIM
-	TIM_Cmd(TIM4, ENABLE);
+	TIM_Cmd(TIM5, ENABLE);
 
 	//interrupt settings
-	NVIC_InitTypeDef NVIC_InitStruct_T4;
-	NVIC_InitStruct_T4.NVIC_IRQChannel = TIM4_IRQn;
-	NVIC_InitStruct_T4.NVIC_IRQChannelPreemptionPriority = 0X00;
-	NVIC_InitStruct_T4.NVIC_IRQChannelSubPriority = 0X03;
-	NVIC_InitStruct_T4.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStruct_T4);
+	NVIC_InitTypeDef NVIC_InitStruct_T5;
+	NVIC_InitStruct_T5.NVIC_IRQChannel = TIM5_IRQn;
+	NVIC_InitStruct_T5.NVIC_IRQChannelPreemptionPriority = 0X00;
+	NVIC_InitStruct_T5.NVIC_IRQChannelSubPriority = 0X03;
+	NVIC_InitStruct_T5.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStruct_T5);
 }
-void TIM4_IRQHandler(){
+void TIM5_IRQHandler(){
 	miliseconds++;
-    TIM_ClearITPendingBit(TIM4, TIM_IT_Update);
+    TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 }
 /**
 * Name: TIM3_IRQHandler
