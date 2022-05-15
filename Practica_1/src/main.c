@@ -1,7 +1,7 @@
 /*
  * File:     main.c
- * Authors:  Alejandro Moñux
- *           José María Fernández López
+ * Authors:  Alejandro Moï¿½ux
+ *           Josï¿½ Marï¿½a Fernï¿½ndez Lï¿½pez
  *
  *
  * */
@@ -31,6 +31,14 @@ char state1 = 0;
 char state2 = 0;
 int velValue = 1000;
 int waitTo = 0;
+int period = 49;
+int initPeriodVelocity = 340;
+int periodScaler = 69; //Esto es lo que se updatea -> 1 = max Freq -> n = posterior freq. en 0 no funca obviamente
+int periodVelocity = 0;
+int duty_cycle1 = 0; //valor entre 0 y 100%
+int duty_cycle2 = 0; //valor entre 0 y 100%
+float dc1mult = 1; //multiplicador % del DC para cuando se activa el switch
+float dc2mult = 1;
 int counter = 0;
 int subclock = 0;
 char startPulsado=0;
@@ -43,7 +51,59 @@ char startPulsado=0;
  *CONFIG
  *
  */
-void TIM_INT_Init(){
+
+void Velocity_Init(){
+	////Timer 4 Generation////
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T4;
+
+	TIM_TimeBaseInitStruct_T4.TIM_Prescaler = 2068;
+	TIM_TimeBaseInitStruct_T4.TIM_Period = periodVelocity;
+	TIM_TimeBaseInitStruct_T4.TIM_ClockDivision = TIM_CKD_DIV1;
+	TIM_TimeBaseInitStruct_T4.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseInitStruct_T4);
+
+	TIM_Cmd(TIM4, ENABLE);
+	////////
+
+	////OC Timer 4////
+	TIM_OCInitTypeDef TIM_OCBaseInitStruct_T4;
+	TIM_OCBaseInitStruct_T4.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCBaseInitStruct_T4.TIM_Pulse = periodVelocity/2;
+	TIM_OCBaseInitStruct_T4.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OCBaseInitStruct_T4.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OC2Init(TIM4, &TIM_OCBaseInitStruct_T4);
+	TIM_OC2PreloadConfig(TIM4, TIM_OCPreload_Enable);
+
+	TIM_OCBaseInitStruct_T4.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCBaseInitStruct_T4.TIM_Pulse = periodVelocity/2;
+	TIM_OCBaseInitStruct_T4.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OCBaseInitStruct_T4.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OC3Init(TIM4, &TIM_OCBaseInitStruct_T4);
+	TIM_OC3PreloadConfig(TIM4, TIM_OCPreload_Enable);
+	////////
+
+
+}
+
+void PWM_Init(){
+
+    TIM_OCInitTypeDef TIM_OCBaseInitStruct_T3;
+	TIM_OCBaseInitStruct_T3.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCBaseInitStruct_T3.TIM_Pulse = duty_cycle1;
+	TIM_OCBaseInitStruct_T3.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OCBaseInitStruct_T3.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OC3Init(TIM3, &TIM_OCBaseInitStruct_T3);
+	TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Enable); //PC9
+	TIM_OCBaseInitStruct_T3.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCBaseInitStruct_T3.TIM_Pulse = duty_cycle2;
+	TIM_OCBaseInitStruct_T3.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OCBaseInitStruct_T3.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OC4Init(TIM3, &TIM_OCBaseInitStruct_T3);
+	TIM_OC4PreloadConfig(TIM3, TIM_OCPreload_Enable);
+}
+void TIM_INT_Init()
+{
     // Enable clock for TIM2
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 
@@ -72,12 +132,10 @@ void TIM_INT_Init(){
     // SubPriority = 0)
     NVIC_InitTypeDef NVIC_InitStruct;
     NVIC_InitStruct.NVIC_IRQChannel = TIM2_IRQn;
-    NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x00;
-    NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x00;
+    NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x010;
+    NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x010;
     NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStruct);
-
-
 
 	//Timer per comptar els microsegons entre els flancs de pujada
 	  // default clock 84MHz
@@ -126,11 +184,13 @@ void TIM2_IRQHandler() //RSI Timer2
 	}
 	//DUTY CYCLE PWM
 	if (wheelsOn == 1){
-		duty_cycle1 = 100;
-		duty_cycle2 = 100;
+		duty_cycle1 = period*dc1mult;
+		duty_cycle2 = period*dc2mult;
+		PWM_Init();
 	}else{
-		duty_cycle1 = 50;
-		duty_cycle2 = 50;
+		duty_cycle1 = period/2;
+		duty_cycle2 = period/2;
+		PWM_Init();
 	}
     if ((GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_7))&&(startPulsado==0)){
     	//Enviar por la USART
@@ -199,6 +259,26 @@ void INIT_IO_PRACTICA_1(){
 	  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN ;
 	  GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+	  GPIO_PinAFConfig(GPIOC,GPIO_PinSource8,GPIO_AF_TIM3);
+	  GPIO_PinAFConfig(GPIOC,GPIO_PinSource9,GPIO_AF_TIM3);
+	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
+	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	  GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+	  GPIO_PinAFConfig(GPIOB,GPIO_PinSource7,GPIO_AF_TIM3);
+	  GPIO_PinAFConfig(GPIOB,GPIO_PinSource8,GPIO_AF_TIM3);
+	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_8;
+	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	  GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+
 
 	  //Configurem el interrupt dels sensors.
 
@@ -273,7 +353,10 @@ void INIT_USART(void){
 
 int main(void)
 {
-	waitTo = 1000000/velValue;
+	int currentScaler = periodScaler;
+	periodVelocity = initPeriodVelocity*periodScaler;
+	duty_cycle1 = period; //valor entre 0 y 100%
+	duty_cycle2 = period; //valor entre 0 y 100%
 	interrupts = 0;
 	wheelsOn = 0;
 	periodMS[0]=-1;
@@ -293,9 +376,15 @@ int main(void)
   STM_EVAL_PBInit(BUTTON_USER,BUTTON_MODE_GPIO);
   //Configurar el timer
   TIM_INT_Init();
+  PWM_Init();
+  Velocity_Init();
   /* Infinite loop */
   while (1)
   {
+	  if(periodScaler!=currentScaler){
+		  periodVelocity = initPeriodVelocity*periodScaler;
+		  Velocity_Init();
+	  }
 	  if (STM_EVAL_PBGetState(BUTTON_USER)==1){
 		  wheelsOn = 1-wheelsOn;
 		  while(STM_EVAL_PBGetState(BUTTON_USER)==1){}
