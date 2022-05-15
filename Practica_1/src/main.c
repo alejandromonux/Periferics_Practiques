@@ -19,8 +19,11 @@
 /* variables */
 static char interrupts;
 char wheelsOn;
-unsigned int miliseconds; //Used for the time calculation. THEY ACTUALLY ARE MICROSECONDS
+unsigned int numOverflows[2]; //Used for the time calculation.
+unsigned int numOverflowsOLD[2]; //Used for the time calculation.
 int periodMS[2];
+int calcDebug[2][10];
+int calcDebugCounter[2];
 int duty_cycle1 = 50; //valor entre 0 y 100%
 int duty_cycle2 = 50; //valor entre 0 y 100%
 int cycle = 0; //No se me ocurre como hacerlo ahora mismo
@@ -40,8 +43,7 @@ char startPulsado=0;
  *CONFIG
  *
  */
-void TIM_INT_Init()
-{
+void TIM_INT_Init(){
     // Enable clock for TIM2
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 
@@ -50,10 +52,10 @@ void TIM_INT_Init()
     // Here, we must set value of prescaler and period,
     // so update event is 0.5Hz or 500ms
     // Update Event (Hz) = timer_clock / ((TIM_Prescaler + 1) *  (TIM_Period + 1))
-    // Update Event (Hz) = 42MHz / ((6+ 1) * (5+ 1)) = 1000 Hz
+    // Update Event (Hz) = 42MHz / ((99+ 1) * (419+ 1)) = 1000 Hz
     TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct;
-    TIM_TimeBaseInitStruct.TIM_Prescaler = 99;
-    TIM_TimeBaseInitStruct.TIM_Period = 419;
+    TIM_TimeBaseInitStruct.TIM_Prescaler = 89;
+    TIM_TimeBaseInitStruct.TIM_Period = 999;
     TIM_TimeBaseInitStruct.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseInitStruct.TIM_CounterMode = TIM_CounterMode_Up;
     TIM_TimeBaseInitStruct.TIM_RepetitionCounter = 0;
@@ -75,85 +77,17 @@ void TIM_INT_Init()
     NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStruct);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-	// Enable clock for TIM4
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
-
-	// TIM4 initialization overflow every 1ms
-	// TIM4 by default has clock of 84MHz
-	// Here, we must set value of prescaler and period,
-	// so update event is 0.5Hz or 500ms
-	// Update Event (Hz) = timer_clock / ((TIM_Prescaler + 1) *  (TIM_Period + 1))
-	// Update Event (Hz) = 42MHz / ((20+ 1) * (0+ 1)) = 2MHz
-	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T3;
-	TIM_TimeBaseInitStruct_T3.TIM_Prescaler = 0;
-	TIM_TimeBaseInitStruct_T3.TIM_Period = 1;
-	TIM_TimeBaseInitStruct_T3.TIM_ClockDivision = TIM_CKD_DIV1;
-	TIM_TimeBaseInitStruct_T3.TIM_CounterMode = TIM_CounterMode_Up;
-    TIM_TimeBaseInitStruct.TIM_RepetitionCounter = 0;
-
-	// TIM2 initialize
-	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStruct_T3);
 
 
-	// Enable TIM2 interrupt
-	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
-	// Start TIM2
-	TIM_Cmd(TIM3, ENABLE);
-
-	// Nested vectored interrupt settings
-	// TIM4 interrupt is most important (PreemptionPriority and
-	// SubPriority = 0)
-	NVIC_InitTypeDef NVIC_InitStruct_T3;
-	NVIC_InitStruct_T3.NVIC_IRQChannel = TIM3_IRQn;
-	NVIC_InitStruct_T3.NVIC_IRQChannelPreemptionPriority = 0X01;
-	NVIC_InitStruct_T3.NVIC_IRQChannelSubPriority = 0X01;
-	NVIC_InitStruct_T3.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStruct_T3);
-
-
-
-
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
-	// TIM4 initialization overflow every 1ms
-	// TIM4 by default has clock of 84MHz
-	// Here, we must set value of prescaler and period,
-	// so update event is 0.5Hz or 500ms
-	// Update Event (Hz) = timer_clock / ((TIM_Prescaler + 1) *  (TIM_Period + 1))
-	// Update Event (Hz) = 42MHz / ((299+ 1) * (279+ 1)) = 1000 Hz
-	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T4;
-	TIM_TimeBaseInitStruct_T4.TIM_Prescaler = 42;
-	TIM_TimeBaseInitStruct_T4.TIM_Period = 1;
-	TIM_TimeBaseInitStruct_T4.TIM_ClockDivision = TIM_CKD_DIV1;
-	TIM_TimeBaseInitStruct_T4.TIM_CounterMode = TIM_CounterMode_Up;
-
-	// TIM2 initialize
-	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseInitStruct_T4);
-	// Enable TIM2 interrupt
-	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
-	// Start TIM2
-	TIM_Cmd(TIM4, ENABLE);
-
-	// Nested vectored interrupt settings
-	// TIM4 interrupt is most important (PreemptionPriority and
-	// SubPriority = 0)
-	NVIC_InitTypeDef NVIC_InitStruct_T4;
-	NVIC_InitStruct_T4.NVIC_IRQChannel = TIM4_IRQn;
-	NVIC_InitStruct_T4.NVIC_IRQChannelPreemptionPriority = 0X01;
-	NVIC_InitStruct_T4.NVIC_IRQChannelSubPriority = 0X01;
-	NVIC_InitStruct_T4.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStruct_T4);
-
-  //Timer per comptar els microsegons entre els flancs de pujada
+	//Timer per comptar els microsegons entre els flancs de pujada
 	  // default clock 84MHz
 	  // Update Event = timer_clock / ((Prescaler + 1) *  (Period + 1))
-		// Update Event (Hz) = 42MHz / ((2+ 1) * (13+ 1)) = 1 MHz
+		// Update Event (Hz) = 90MHz / ((2+ 1) * (14+ 1)) = 1 MHz
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
 
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T5;
-	TIM_TimeBaseInitStruct_T5.TIM_Prescaler = 2;
-	TIM_TimeBaseInitStruct_T5.TIM_Period = 13;
+	TIM_TimeBaseInitStruct_T5.TIM_Prescaler = 89;
+	TIM_TimeBaseInitStruct_T5.TIM_Period = 0xFFFE;
 	TIM_TimeBaseInitStruct_T5.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseInitStruct_T5.TIM_CounterMode = TIM_CounterMode_Up;
 
@@ -168,47 +102,21 @@ void TIM_INT_Init()
 	NVIC_InitTypeDef NVIC_InitStruct_T5;
 	NVIC_InitStruct_T5.NVIC_IRQChannel = TIM5_IRQn;
 	NVIC_InitStruct_T5.NVIC_IRQChannelPreemptionPriority = 0X00;
-	NVIC_InitStruct_T5.NVIC_IRQChannelSubPriority = 0X03;
+	NVIC_InitStruct_T5.NVIC_IRQChannelSubPriority = 0X02;
 	NVIC_InitStruct_T5.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStruct_T5);
 
 }
 
 void TIM5_IRQHandler(){
-	miliseconds++;
+	numOverflows[0]++;
+	numOverflows[1]++;
     TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 }
 
-void TIM3_IRQHandler(){
-	if(cycle == 0 || cycle == duty_cycle1){
-		if(cycle < duty_cycle1 && GPIO_ReadOutputDataBit(GPIOD, GPIO_Pin_3) == 1){
-			GPIO_ToggleBits(GPIOD, GPIO_Pin_3);
-			GPIO_ToggleBits(GPIOD, GPIO_Pin_4);
-		}
-		GPIO_ToggleBits(GPIOD, GPIO_Pin_3);
-		GPIO_ToggleBits(GPIOD, GPIO_Pin_4);
-	}
-	cycle++;
-	if(cycle > 100){
-		cycle = 0;
-	}
-
-
-    TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
-}
-
-void TIM4_IRQHandler(){ //Tras leer el enunciado no creo que esto es lo que se tenga que hacer
-
-	GPIO_ToggleBits(GPIOD, GPIO_Pin_5);
-	GPIO_ToggleBits(GPIOD, GPIO_Pin_6);
-
-
-    TIM_ClearITPendingBit(TIM4, TIM_IT_Update);
-}
 
 void TIM2_IRQHandler() //RSI Timer2
 {
-	//miliseconds++;
 
 	if(interrupts ==200){
 		STM_EVAL_LEDToggle(LED3);
@@ -245,20 +153,23 @@ void TIM2_IRQHandler() //RSI Timer2
  */
 
 int getRevs(int intIndex){
+	uint32_t value = TIM_GetCounter(TIM5);
 	if (periodMS[intIndex] == -1){
-		periodMS[intIndex] = miliseconds;
+		periodMS[intIndex] = value;
 		return -1;
 	}else{
-		//TODO: controlar el overflow
-		if (miliseconds < periodMS[intIndex]){
-			periodMS[intIndex] = MAXINTVALUE - periodMS[intIndex] + miliseconds;
+		// controlar el overflow
+		if (value < periodMS[intIndex]){
+			periodMS[intIndex] = MAXINTVALUE*(numOverflows[intIndex]-numOverflowsOLD[intIndex]) - periodMS[intIndex] + value;
 		}else{
-			periodMS[intIndex] = miliseconds - periodMS[intIndex];
+			periodMS[intIndex] = value - periodMS[intIndex];
 		}
 		float auxiliar = (1/(16*(periodMS[intIndex]/(float)TIME_MAGNITUTE_DENOMINATOR)));
 		int output = (int)auxiliar; //(int)(auxiliar*1000); //Calculem revolucions
 		//Lo anterior lo hemos puesto sin el *1000 porque ya sale un num l�gico, digamos. Antes la resoluci�n era de ms y ahora es de us
-		periodMS[intIndex] = miliseconds;
+		calcDebug[intIndex][calcDebugCounter[intIndex]] = output;
+		periodMS[intIndex] = value;
+		numOverflowsOLD[intIndex]=numOverflows[intIndex];
 		return output;
 	}
 }
@@ -278,15 +189,10 @@ void EXTI2_IRQHandler()
 
 void INIT_IO_PRACTICA_1(){
 	  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-	  //Outputs
-	  GPIO_InitTypeDef GPIO_InitStructure;
-	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6;
-	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-	  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL; //FIXME: Si no va poner pullup
-	  GPIO_Init(GPIOD, &GPIO_InitStructure);
+	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+
 	  //INPUTS
+      GPIO_InitTypeDef GPIO_InitStructure;
 	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_2|GPIO_Pin_7;
 	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
@@ -311,8 +217,8 @@ void INIT_IO_PRACTICA_1(){
 	  //Prioritat a 1 al vector
 	  NVIC_InitTypeDef NVIC_InitStruct;
 	  NVIC_InitStruct.NVIC_IRQChannel = EXTI1_IRQn;
-	  NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x04;
-	  NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x04;
+	  NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x01;
+	  NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x00;
 	  NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	  NVIC_Init(&NVIC_InitStruct);
 	  /*******************
@@ -330,11 +236,10 @@ void INIT_IO_PRACTICA_1(){
 	  //Prioritat a 1 al vector
 	  NVIC_InitTypeDef NVIC_InitStruct2;
 	  NVIC_InitStruct2.NVIC_IRQChannel = EXTI2_IRQn;
-	  NVIC_InitStruct2.NVIC_IRQChannelPreemptionPriority = 0x05;
-	  NVIC_InitStruct2.NVIC_IRQChannelSubPriority = 0x05;
+	  NVIC_InitStruct2.NVIC_IRQChannelPreemptionPriority = 0x01;
+	  NVIC_InitStruct2.NVIC_IRQChannelSubPriority = 0x01;
 	  NVIC_InitStruct2.NVIC_IRQChannelCmd = ENABLE;
 	  NVIC_Init(&NVIC_InitStruct2);
-
 
 }
 
@@ -371,11 +276,14 @@ int main(void)
 	waitTo = 1000000/velValue;
 	interrupts = 0;
 	wheelsOn = 0;
-	miliseconds = 0;
 	periodMS[0]=-1;
 	periodMS[1]=-1;
+	numOverflows[0] = 0;
+	numOverflows[1] = 0;
+	numOverflowsOLD[0] = 0;
+	numOverflowsOLD[1] = 0;
 
-  /* TODO - Add your application code here */
+
   INIT_IO_PRACTICA_1();
   STM_EVAL_LEDInit(LED3);
   STM_EVAL_LEDInit(LED4);
@@ -388,7 +296,6 @@ int main(void)
   /* Infinite loop */
   while (1)
   {
-
 	  if (STM_EVAL_PBGetState(BUTTON_USER)==1){
 		  wheelsOn = 1-wheelsOn;
 		  while(STM_EVAL_PBGetState(BUTTON_USER)==1){}
