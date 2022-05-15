@@ -31,8 +31,10 @@ int velValue = 1000;
 int waitTo = 0;
 int period = 49;
 int initPeriodVelocity = 340;
-int periodScaler = 1; //Esto es lo que se updatea -> 1 = max Freq -> n = posterior freq. en 0 no funca obviamente
-int periodVelocity = 0;
+int periodScaler1 = 1; //Esto es lo que se updatea -> 1 = max Freq -> n = posterior freq. en 0 no funca obviamente
+int periodScaler2 = 1;
+int periodVelocity1 = 0;
+int periodVelocity2 = 0;
 int duty_cycle1 = 0; //valor entre 0 y 100%
 int duty_cycle2 = 0; //valor entre 0 y 100%
 float dc1mult = 1; //multiplicador % del DC para cuando se activa el switch
@@ -56,29 +58,47 @@ void Velocity_Init(){
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T4;
 
 	TIM_TimeBaseInitStruct_T4.TIM_Prescaler = 2068;
-	TIM_TimeBaseInitStruct_T4.TIM_Period = periodVelocity;
+	TIM_TimeBaseInitStruct_T4.TIM_Period = periodVelocity1;
 	TIM_TimeBaseInitStruct_T4.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseInitStruct_T4.TIM_CounterMode = TIM_CounterMode_Up;
 	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseInitStruct_T4);
 
+
+
 	TIM_Cmd(TIM4, ENABLE);
+	////////
+	////Timer 9 Generation////
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM9, ENABLE); //PE5
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T9;
+
+	TIM_TimeBaseInitStruct_T9.TIM_Prescaler = 4136;
+	TIM_TimeBaseInitStruct_T9.TIM_Period = periodVelocity2;
+	TIM_TimeBaseInitStruct_T9.TIM_ClockDivision = TIM_CKD_DIV1;
+	TIM_TimeBaseInitStruct_T9.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM9, &TIM_TimeBaseInitStruct_T9);
+
+
+
+	TIM_Cmd(TIM9, ENABLE);
 	////////
 
 	////OC Timer 4////
 	TIM_OCInitTypeDef TIM_OCBaseInitStruct_T4;
 	TIM_OCBaseInitStruct_T4.TIM_OutputState = TIM_OutputState_Enable;
-	TIM_OCBaseInitStruct_T4.TIM_Pulse = periodVelocity/2;
+	TIM_OCBaseInitStruct_T4.TIM_Pulse = periodVelocity1/2;
 	TIM_OCBaseInitStruct_T4.TIM_OCMode = TIM_OCMode_PWM1;
 	TIM_OCBaseInitStruct_T4.TIM_OCPolarity = TIM_OCPolarity_High;
 	TIM_OC2Init(TIM4, &TIM_OCBaseInitStruct_T4);
 	TIM_OC2PreloadConfig(TIM4, TIM_OCPreload_Enable);
-
-	TIM_OCBaseInitStruct_T4.TIM_OutputState = TIM_OutputState_Enable;
-	TIM_OCBaseInitStruct_T4.TIM_Pulse = periodVelocity/2;
-	TIM_OCBaseInitStruct_T4.TIM_OCMode = TIM_OCMode_PWM1;
-	TIM_OCBaseInitStruct_T4.TIM_OCPolarity = TIM_OCPolarity_High;
-	TIM_OC3Init(TIM4, &TIM_OCBaseInitStruct_T4);
-	TIM_OC3PreloadConfig(TIM4, TIM_OCPreload_Enable);
+	////////
+	////OC Timer 9/////
+	TIM_OCInitTypeDef TIM_OCBaseInitStruct_T9;
+	TIM_OCBaseInitStruct_T9.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCBaseInitStruct_T9.TIM_Pulse = periodVelocity2/2;
+	TIM_OCBaseInitStruct_T9.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OCBaseInitStruct_T9.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OC1Init(TIM9, &TIM_OCBaseInitStruct_T9);
+	TIM_OC1PreloadConfig(TIM9, TIM_OCPreload_Enable);
 	////////
 
 
@@ -195,10 +215,14 @@ void TIM2_IRQHandler() //RSI Timer2
 		duty_cycle1 = period*dc1mult;
 		duty_cycle2 = period*dc2mult;
 		PWM_Init();
+		periodScaler1=1;
+		periodScaler2=1;
 	}else{
 		duty_cycle1 = period/2;
 		duty_cycle2 = period/2;
 		PWM_Init();
+		periodScaler1=0;
+		periodScaler2=0;
 	}
     if ((GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_7))&&(startPulsado==0)){
     	//Enviar por la USART
@@ -259,6 +283,7 @@ void INIT_IO_PRACTICA_1(){
 	  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 	  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 	  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+	  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
 	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
 	  //INPUTS
@@ -287,6 +312,14 @@ void INIT_IO_PRACTICA_1(){
 	  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	  GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+	  GPIO_PinAFConfig(GPIOE,GPIO_PinSource5,GPIO_AF_TIM9);
+	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	  GPIO_Init(GPIOE, &GPIO_InitStructure);
 
 
 
@@ -363,8 +396,10 @@ void INIT_USART(void){
 
 int main(void)
 {
-	int currentScaler = periodScaler;
-	periodVelocity = initPeriodVelocity*periodScaler;
+	int currentScaler1 = periodScaler1;
+	int currentScaler2 = periodScaler2;
+	periodVelocity1 = initPeriodVelocity*periodScaler1;
+	periodVelocity2 = initPeriodVelocity*periodScaler2;
 	duty_cycle1 = period; //valor entre 0 y 100%
 	duty_cycle2 = period; //valor entre 0 y 100%
 	interrupts = 0;
@@ -391,9 +426,13 @@ int main(void)
   /* Infinite loop */
   while (1)
   {
-	  if(periodScaler!=currentScaler){
-		  periodVelocity = initPeriodVelocity*periodScaler;
+	  if(periodScaler1!=currentScaler1 || periodScaler2!=currentScaler2){
+		  periodVelocity1 = initPeriodVelocity*periodScaler1;
+		  periodVelocity2 = initPeriodVelocity*periodScaler2;
 		  Velocity_Init();
+		  currentScaler1 = periodScaler1;
+		  currentScaler2 = periodScaler2;
+
 	  }
 	  if (STM_EVAL_PBGetState(BUTTON_USER)==1){
 		  wheelsOn = 1-wheelsOn;
