@@ -10,6 +10,7 @@
 //#include "stm32f4xx.h"
 //#include "stm32f429i_discovery.h"
 #include <DMA_usart_config.h>
+#include <math.h>
 
 #define MAXINTVALUE 	4294967295
 #define TIME_MAGNITUTE_DENOMINATOR 1000000
@@ -252,16 +253,23 @@ int getRevs(int intIndex){
 	}else{
 		// controlar el overflow
 		if (value < periodMS[intIndex]){
-			periodMS[intIndex] = MAXINTVALUE*(numOverflows[intIndex]-numOverflowsOLD[intIndex]) - periodMS[intIndex] + value;
+			int overflowDiff = 0;
+			if(numOverflows[intIndex]-numOverflowsOLD[intIndex] < 0){
+				overflowDiff = 0;
+			}else{
+				overflowDiff=numOverflows[intIndex]-numOverflowsOLD[intIndex];
+			}
+			periodMS[intIndex] = MAXINTVALUE*(overflowDiff) - periodMS[intIndex] + value;
 		}else{
 			periodMS[intIndex] = value - periodMS[intIndex];
 		}
 		float auxiliar = (1/(16*(periodMS[intIndex]/(float)TIME_MAGNITUTE_DENOMINATOR)));
-		int output = (int)auxiliar; //(int)(auxiliar*1000); //Calculem revolucions
+		int output = ceil(auxiliar); //(int)(auxiliar*1000); //Calculem revolucions
 		//Lo anterior lo hemos puesto sin el *1000 porque ya sale un num l�gico, digamos. Antes la resoluci�n era de ms y ahora es de us
 		calcDebug[intIndex][calcDebugCounter[intIndex]] = output;
 		periodMS[intIndex] = value;
 		numOverflowsOLD[intIndex]=numOverflows[intIndex];
+		calcDebugCounter[intIndex] = (calcDebugCounter[intIndex]+1)%11;
 		return output;
 	}
 }
