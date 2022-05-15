@@ -32,8 +32,8 @@ int velValue = 1000;
 int waitTo = 0;
 int period = 49;
 int initPeriodVelocity = 340;
-int periodScaler1 = 1; //Esto es lo que se updatea -> 1 = max Freq -> n = posterior freq. en 0 no funca obviamente
-int periodScaler2 = 1;
+float periodScaler1 = 1; //Esto es lo que se updatea -> 1 = max Freq -> n = posterior freq. en 0 no funca obviamente
+float periodScaler2 = 1;
 int periodVelocity1 = 0;
 int periodVelocity2 = 0;
 int duty_cycle1 = 0; //valor entre 0 y 100%
@@ -267,7 +267,7 @@ int getRevs(int intIndex){
 			periodMS[intIndex] = value - periodMS[intIndex];
 		}
 		float auxiliar = (1/(16*(periodMS[intIndex]/(float)TIME_MAGNITUTE_DENOMINATOR)));
-		int output = ceil(auxiliar); //(int)(auxiliar*1000); //Calculem revolucions
+		int output = round(auxiliar); //(int)(auxiliar*1000); //Calculem revolucions
 		//Lo anterior lo hemos puesto sin el *1000 porque ya sale un num l�gico, digamos. Antes la resoluci�n era de ms y ahora es de us
 		calcDebug[intIndex][calcDebugCounter[intIndex]] = output;
 		periodMS[intIndex] = value;
