@@ -54,7 +54,7 @@ char startPulsado=0;
 
 void Velocity_Init(){
 	////Timer 4 Generation////
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE); //PB7
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T4;
 
 	TIM_TimeBaseInitStruct_T4.TIM_Prescaler = 2068;
@@ -304,9 +304,8 @@ void INIT_IO_PRACTICA_1(){
 	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	  GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-	  GPIO_PinAFConfig(GPIOB,GPIO_PinSource7,GPIO_AF_TIM3);
-	  GPIO_PinAFConfig(GPIOB,GPIO_PinSource8,GPIO_AF_TIM3);
-	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_8;
+	  GPIO_PinAFConfig(GPIOB,GPIO_PinSource7,GPIO_AF_TIM4);
+	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
 	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
