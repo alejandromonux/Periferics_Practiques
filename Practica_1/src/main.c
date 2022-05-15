@@ -43,6 +43,11 @@ float dc2mult = 1;
 int counter = 0;
 int subclock = 0;
 char startPulsado=0;
+char stop;
+float currentScaler1 = 0;
+float currentScaler2 = 0;
+float savedperiodScaler1 = 0;
+float savedperiodScaler2 = 0;
 /* Private function prototypes */
 /* Private functions */
 
@@ -216,14 +221,12 @@ void TIM2_IRQHandler() //RSI Timer2
 		duty_cycle1 = period*dc1mult;
 		duty_cycle2 = period*dc2mult;
 		PWM_Init();
-		periodScaler1=1;
-		periodScaler2=1;
+		stop = 0;
 	}else{
 		duty_cycle1 = period/2;
 		duty_cycle2 = period/2;
 		PWM_Init();
-		periodScaler1=0;
-		periodScaler2=0;
+		stop = 1;
 	}
     if ((GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_7))&&(startPulsado==0)){
     	//Enviar por la USART
@@ -391,7 +394,7 @@ void INIT_USART(void){
 	GPIO_PinAFConfig(GPIOA,GPIO_PinSource9,GPIO_AF_USART1);
 	GPIO_PinAFConfig(GPIOA,GPIO_PinSource10,GPIO_AF_USART1);
 
-	USART_InitStructure.USART_BaudRate = /*128000*/ 9600;
+	USART_InitStructure.USART_BaudRate = 128000 /*9600*/;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -403,8 +406,8 @@ void INIT_USART(void){
 
 int main(void)
 {
-	int currentScaler1 = periodScaler1;
-	int currentScaler2 = periodScaler2;
+	currentScaler1 = periodScaler1;
+	currentScaler2 = periodScaler2;
 	periodVelocity1 = initPeriodVelocity*periodScaler1;
 	periodVelocity2 = initPeriodVelocity*periodScaler2;
 	duty_cycle1 = period; //valor entre 0 y 100%
@@ -445,15 +448,21 @@ int main(void)
 		  wheelsOn = 1-wheelsOn;
 		  while(STM_EVAL_PBGetState(BUTTON_USER)==1){}
 	  }
-	  /*
-	  if(USART_GetFlagStatus(USART1,USART_IT_RXNE)==SET)
-	{
-		uint16_t ucTemp = USART_ReceiveData(USART1);
-		USART_SendData(USART1,ucTemp);
-		STM_EVAL_LEDToggle(LED4);
-	}*/
-
-	 /*Codi de que si comencem a rebre llegim les tres primeres i despres tirem la config de la DMA*/
+	  if(stop == 1){
+	            if(savedperiodScaler1 == 0){
+	                savedperiodScaler1 = periodScaler1;
+	                savedperiodScaler2 = periodScaler2;
+	            }
+	            periodScaler1 = 0;
+	            periodScaler2 = 0;
+	        }else{
+	            if(savedperiodScaler1 != 0){
+	                periodScaler1 = savedperiodScaler1;
+	                periodScaler2 = savedperiodScaler2;
+	                savedperiodScaler1 = 0;
+	                savedperiodScaler2 = 0;
+	            }
+	        }
   }
 }
 
