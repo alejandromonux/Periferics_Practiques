@@ -36,14 +36,14 @@ float periodScaler1 = 1; //Esto es lo que se updatea -> 1 = max Freq -> n = post
 float periodScaler2 = 1;
 int periodVelocity1 = 0;
 int periodVelocity2 = 0;
-int duty_cycle1 = 0; //valor entre 0 y 100%
-int duty_cycle2 = 0; //valor entre 0 y 100%
+int duty_cycle1 = 0; //valor entre 0 y 100%    //PC9
+int duty_cycle2 = 0; //valor entre 0 y 100%    //PC8
 float dc1mult = 1; //multiplicador % del DC para cuando se activa el switch
 float dc2mult = 1;
 int counter = 0;
 int subclock = 0;
 char startPulsado=0;
-char stop;
+char stop = 0;
 float currentScaler1 = 0;
 float currentScaler2 = 0;
 float savedperiodScaler1 = 0;
@@ -149,7 +149,7 @@ void TIM_INT_Init()
     // Update Event (Hz) = 42MHz / ((99+ 1) * (419+ 1)) = 1000 Hz
     TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct;
     TIM_TimeBaseInitStruct.TIM_Prescaler = 89;
-    TIM_TimeBaseInitStruct.TIM_Period = 999;
+    TIM_TimeBaseInitStruct.TIM_Period = 499;
     TIM_TimeBaseInitStruct.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseInitStruct.TIM_CounterMode = TIM_CounterMode_Up;
     TIM_TimeBaseInitStruct.TIM_RepetitionCounter = 0;
