@@ -143,39 +143,7 @@ void TIM_INT_Init()
 
     TIM_Cmd(TIM3, ENABLE);
 
-/*
-//////////////////////////////////////////////
 
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
-	// TIM4 initialization overflow every 1ms
-	// TIM4 by default has clock of 84MHz
-	// Here, we must set value of prescaler and period,
-	// so update event is 0.5Hz or 500ms
-	// Update Event (Hz) = timer_clock / ((TIM_Prescaler + 1) *  (TIM_Period + 1))
-	// Update Event (Hz) = 42MHz / ((299+ 1) * (279+ 1)) = 1000 Hz
-	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T4;
-	TIM_TimeBaseInitStruct_T4.TIM_Prescaler = 5;
-	TIM_TimeBaseInitStruct_T4.TIM_Period = 1;
-	TIM_TimeBaseInitStruct_T4.TIM_ClockDivision = TIM_CKD_DIV1;
-	TIM_TimeBaseInitStruct_T4.TIM_CounterMode = TIM_CounterMode_Up;
-
-	// TIM2 initialize
-	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseInitStruct_T4);
-	// Enable TIM2 interrupt
-	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
-	// Start TIM2
-	TIM_Cmd(TIM4, ENABLE);
-
-	// Nested vectored interrupt settings
-	// TIM4 interrupt is most important (PreemptionPriority and
-	// SubPriority = 0)
-	NVIC_InitTypeDef NVIC_InitStruct_T4;
-	NVIC_InitStruct_T4.NVIC_IRQChannel = TIM4_IRQn;
-	NVIC_InitStruct_T4.NVIC_IRQChannelPreemptionPriority = 0X00;
-	NVIC_InitStruct_T4.NVIC_IRQChannelSubPriority = 0X02;
-	NVIC_InitStruct_T4.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStruct_T4);
-*/
   //Timer per comptar els microsegons entre els flancs de pujada
 	  // default clock 84MHz
 	  // Update Event = timer_clock / ((Prescaler + 1) *  (Period + 1))
@@ -399,6 +367,7 @@ void INIT_USART(void){
 
 int main(void)
 {
+	int currentScaler = periodScaler;
 	periodVelocity = initPeriodVelocity*periodScaler;
 	duty_cycle1 = period; //valor entre 0 y 100%
 	duty_cycle2 = period; //valor entre 0 y 100%
@@ -422,7 +391,10 @@ int main(void)
   /* Infinite loop */
   while (1)
   {
-
+	  if(periodScaler!=currentScaler){
+		  periodVelocity = initPeriodVelocity*periodScaler;
+		  Velocity_Init();
+	  }
 	  if (STM_EVAL_PBGetState(BUTTON_USER)==1){
 		  wheelsOn = 1-wheelsOn;
 		  while(STM_EVAL_PBGetState(BUTTON_USER)==1){}
