@@ -21,13 +21,16 @@ static char interrupts;
 char wheelsOn;
 unsigned int miliseconds; //Used for the time calculation. THEY ACTUALLY ARE MICROSECONDS
 int periodMS[2];
-int duty_cycle1 = 50; //valor entre 0 y 100%
-int duty_cycle2 = 50; //valor entre 0 y 100%
-int cycle = 0; //No se me ocurre como hacerlo ahora mismo
-char state1 = 0;
-char state2 = 0;
-int velValue = 1000;
-int waitTo = 0;
+
+int period = 49;
+int initPeriodVelocity = 340;
+int periodScaler = 69; //Esto es lo que se updatea -> 1 = max Freq -> n = posterior freq. en 0 no funca obviamente
+int periodVelocity = 0;
+int duty_cycle1 = 0; //valor entre 0 y 100%
+int duty_cycle2 = 0; //valor entre 0 y 100%
+float dc1mult = 1; //multiplicador % del DC para cuando se activa el switch
+float dc2mult = 1;
+
 int counter = 0;
 int subclock = 0;
 char startPulsado=0;
@@ -40,6 +43,57 @@ char startPulsado=0;
  *CONFIG
  *
  */
+
+void Velocity_Init(){
+	////Timer 4 Generation////
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T4;
+
+	TIM_TimeBaseInitStruct_T4.TIM_Prescaler = 2068;
+	TIM_TimeBaseInitStruct_T4.TIM_Period = periodVelocity;
+	TIM_TimeBaseInitStruct_T4.TIM_ClockDivision = TIM_CKD_DIV1;
+	TIM_TimeBaseInitStruct_T4.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseInitStruct_T4);
+
+	TIM_Cmd(TIM4, ENABLE);
+	////////
+
+	////OC Timer 4////
+	TIM_OCInitTypeDef TIM_OCBaseInitStruct_T4;
+	TIM_OCBaseInitStruct_T4.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCBaseInitStruct_T4.TIM_Pulse = periodVelocity/2;
+	TIM_OCBaseInitStruct_T4.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OCBaseInitStruct_T4.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OC2Init(TIM4, &TIM_OCBaseInitStruct_T4);
+	TIM_OC2PreloadConfig(TIM4, TIM_OCPreload_Enable);
+
+	TIM_OCBaseInitStruct_T4.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCBaseInitStruct_T4.TIM_Pulse = periodVelocity/2;
+	TIM_OCBaseInitStruct_T4.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OCBaseInitStruct_T4.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OC3Init(TIM4, &TIM_OCBaseInitStruct_T4);
+	TIM_OC3PreloadConfig(TIM4, TIM_OCPreload_Enable);
+	////////
+
+
+}
+
+void PWM_Init(){
+
+    TIM_OCInitTypeDef TIM_OCBaseInitStruct_T3;
+	TIM_OCBaseInitStruct_T3.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCBaseInitStruct_T3.TIM_Pulse = duty_cycle1;
+	TIM_OCBaseInitStruct_T3.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OCBaseInitStruct_T3.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OC3Init(TIM3, &TIM_OCBaseInitStruct_T3);
+	TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Enable); //PC9
+	TIM_OCBaseInitStruct_T3.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCBaseInitStruct_T3.TIM_Pulse = duty_cycle2;
+	TIM_OCBaseInitStruct_T3.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OCBaseInitStruct_T3.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OC4Init(TIM3, &TIM_OCBaseInitStruct_T3);
+	TIM_OC4PreloadConfig(TIM3, TIM_OCPreload_Enable);
+}
 void TIM_INT_Init()
 {
     // Enable clock for TIM2
@@ -70,50 +124,27 @@ void TIM_INT_Init()
     // SubPriority = 0)
     NVIC_InitTypeDef NVIC_InitStruct;
     NVIC_InitStruct.NVIC_IRQChannel = TIM2_IRQn;
-    NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x00;
-    NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x00;
+    NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0x010;
+    NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0x010;
     NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStruct);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-	// Enable clock for TIM4
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+	// Timer 3 disgusting CPU block
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+    TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T3;
 
-	// TIM4 initialization overflow every 1ms
-	// TIM4 by default has clock of 84MHz
-	// Here, we must set value of prescaler and period,
-	// so update event is 0.5Hz or 500ms
-	// Update Event (Hz) = timer_clock / ((TIM_Prescaler + 1) *  (TIM_Period + 1))
-	// Update Event (Hz) = 42MHz / ((20+ 1) * (0+ 1)) = 2MHz
-	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T3;
-	TIM_TimeBaseInitStruct_T3.TIM_Prescaler = 0;
-	TIM_TimeBaseInitStruct_T3.TIM_Period = 1;
+    TIM_TimeBaseInitStruct_T3.TIM_Prescaler = 89;
+	TIM_TimeBaseInitStruct_T3.TIM_Period = period;
 	TIM_TimeBaseInitStruct_T3.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseInitStruct_T3.TIM_CounterMode = TIM_CounterMode_Up;
-    TIM_TimeBaseInitStruct.TIM_RepetitionCounter = 0;
-
-	// TIM2 initialize
 	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStruct_T3);
 
+    TIM_Cmd(TIM3, ENABLE);
 
-	// Enable TIM2 interrupt
-	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
-	// Start TIM2
-	TIM_Cmd(TIM3, ENABLE);
-
-	// Nested vectored interrupt settings
-	// TIM4 interrupt is most important (PreemptionPriority and
-	// SubPriority = 0)
-	NVIC_InitTypeDef NVIC_InitStruct_T3;
-	NVIC_InitStruct_T3.NVIC_IRQChannel = TIM3_IRQn;
-	NVIC_InitStruct_T3.NVIC_IRQChannelPreemptionPriority = 0X01;
-	NVIC_InitStruct_T3.NVIC_IRQChannelSubPriority = 0X01;
-	NVIC_InitStruct_T3.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStruct_T3);
-
-
-
+/*
+//////////////////////////////////////////////
 
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 	// TIM4 initialization overflow every 1ms
@@ -123,7 +154,7 @@ void TIM_INT_Init()
 	// Update Event (Hz) = timer_clock / ((TIM_Prescaler + 1) *  (TIM_Period + 1))
 	// Update Event (Hz) = 42MHz / ((299+ 1) * (279+ 1)) = 1000 Hz
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T4;
-	TIM_TimeBaseInitStruct_T4.TIM_Prescaler = 42;
+	TIM_TimeBaseInitStruct_T4.TIM_Prescaler = 5;
 	TIM_TimeBaseInitStruct_T4.TIM_Period = 1;
 	TIM_TimeBaseInitStruct_T4.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseInitStruct_T4.TIM_CounterMode = TIM_CounterMode_Up;
@@ -140,11 +171,11 @@ void TIM_INT_Init()
 	// SubPriority = 0)
 	NVIC_InitTypeDef NVIC_InitStruct_T4;
 	NVIC_InitStruct_T4.NVIC_IRQChannel = TIM4_IRQn;
-	NVIC_InitStruct_T4.NVIC_IRQChannelPreemptionPriority = 0X01;
-	NVIC_InitStruct_T4.NVIC_IRQChannelSubPriority = 0X01;
+	NVIC_InitStruct_T4.NVIC_IRQChannelPreemptionPriority = 0X00;
+	NVIC_InitStruct_T4.NVIC_IRQChannelSubPriority = 0X02;
 	NVIC_InitStruct_T4.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStruct_T4);
-
+*/
   //Timer per comptar els microsegons entre els flancs de pujada
 	  // default clock 84MHz
 	  // Update Event = timer_clock / ((Prescaler + 1) *  (Period + 1))
@@ -167,7 +198,7 @@ void TIM_INT_Init()
 	//interrupt settings
 	NVIC_InitTypeDef NVIC_InitStruct_T5;
 	NVIC_InitStruct_T5.NVIC_IRQChannel = TIM5_IRQn;
-	NVIC_InitStruct_T5.NVIC_IRQChannelPreemptionPriority = 0X00;
+	NVIC_InitStruct_T5.NVIC_IRQChannelPreemptionPriority = 0X03;
 	NVIC_InitStruct_T5.NVIC_IRQChannelSubPriority = 0X03;
 	NVIC_InitStruct_T5.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStruct_T5);
@@ -179,32 +210,8 @@ void TIM5_IRQHandler(){
     TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 }
 
-void TIM3_IRQHandler(){
-	if(cycle == 0 || cycle == duty_cycle1){
-		if(cycle < duty_cycle1 && GPIO_ReadOutputDataBit(GPIOD, GPIO_Pin_3) == 1){
-			GPIO_ToggleBits(GPIOD, GPIO_Pin_3);
-			GPIO_ToggleBits(GPIOD, GPIO_Pin_4);
-		}
-		GPIO_ToggleBits(GPIOD, GPIO_Pin_3);
-		GPIO_ToggleBits(GPIOD, GPIO_Pin_4);
-	}
-	cycle++;
-	if(cycle > 100){
-		cycle = 0;
-	}
 
 
-    TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
-}
-
-void TIM4_IRQHandler(){ //Tras leer el enunciado no creo que esto es lo que se tenga que hacer
-
-	GPIO_ToggleBits(GPIOD, GPIO_Pin_5);
-	GPIO_ToggleBits(GPIOD, GPIO_Pin_6);
-
-
-    TIM_ClearITPendingBit(TIM4, TIM_IT_Update);
-}
 
 void TIM2_IRQHandler() //RSI Timer2
 {
@@ -218,11 +225,13 @@ void TIM2_IRQHandler() //RSI Timer2
 	}
 	//DUTY CYCLE PWM
 	if (wheelsOn == 1){
-		duty_cycle1 = 100;
-		duty_cycle2 = 100;
+		duty_cycle1 = period*dc1mult;
+		duty_cycle2 = period*dc2mult;
+		PWM_Init();
 	}else{
-		duty_cycle1 = 50;
-		duty_cycle2 = 50;
+		duty_cycle1 = period/2;
+		duty_cycle2 = period/2;
+		PWM_Init();
 	}
     if ((GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_7))&&(startPulsado==0)){
     	//Enviar por la USART
@@ -278,6 +287,8 @@ void EXTI2_IRQHandler()
 
 void INIT_IO_PRACTICA_1(){
 	  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+	  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 	  //Outputs
 	  GPIO_InitTypeDef GPIO_InitStructure;
 	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6;
@@ -293,6 +304,26 @@ void INIT_IO_PRACTICA_1(){
 	  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN ;
 	  GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+	  GPIO_PinAFConfig(GPIOC,GPIO_PinSource8,GPIO_AF_TIM3);
+	  GPIO_PinAFConfig(GPIOC,GPIO_PinSource9,GPIO_AF_TIM3);
+	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
+	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	  GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+	  GPIO_PinAFConfig(GPIOB,GPIO_PinSource7,GPIO_AF_TIM3);
+	  GPIO_PinAFConfig(GPIOB,GPIO_PinSource8,GPIO_AF_TIM3);
+	  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_8;
+	  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	  GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+
 
 	  //Configurem el interrupt dels sensors.
 
@@ -368,13 +399,14 @@ void INIT_USART(void){
 
 int main(void)
 {
-	waitTo = 1000000/velValue;
+	periodVelocity = initPeriodVelocity*periodScaler;
+	duty_cycle1 = period; //valor entre 0 y 100%
+	duty_cycle2 = period; //valor entre 0 y 100%
 	interrupts = 0;
 	wheelsOn = 0;
 	miliseconds = 0;
 	periodMS[0]=-1;
 	periodMS[1]=-1;
-
   /* TODO - Add your application code here */
   INIT_IO_PRACTICA_1();
   STM_EVAL_LEDInit(LED3);
@@ -385,6 +417,8 @@ int main(void)
   STM_EVAL_PBInit(BUTTON_USER,BUTTON_MODE_GPIO);
   //Configurar el timer
   TIM_INT_Init();
+  PWM_Init();
+  Velocity_Init();
   /* Infinite loop */
   while (1)
   {
