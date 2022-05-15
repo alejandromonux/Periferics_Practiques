@@ -24,8 +24,6 @@ unsigned int numOverflowsOLD[2]; //Used for the time calculation.
 int periodMS[2];
 int calcDebug[2][10];
 int calcDebugCounter[2];
-int duty_cycle1 = 50; //valor entre 0 y 100%
-int duty_cycle2 = 50; //valor entre 0 y 100%
 int cycle = 0; //No se me ocurre como hacerlo ahora mismo
 char state1 = 0;
 char state2 = 0;
@@ -33,7 +31,7 @@ int velValue = 1000;
 int waitTo = 0;
 int period = 49;
 int initPeriodVelocity = 340;
-int periodScaler = 69; //Esto es lo que se updatea -> 1 = max Freq -> n = posterior freq. en 0 no funca obviamente
+int periodScaler = 1; //Esto es lo que se updatea -> 1 = max Freq -> n = posterior freq. en 0 no funca obviamente
 int periodVelocity = 0;
 int duty_cycle1 = 0; //valor entre 0 y 100%
 int duty_cycle2 = 0; //valor entre 0 y 100%
@@ -87,9 +85,19 @@ void Velocity_Init(){
 }
 
 void PWM_Init(){
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct_T3;
+	TIM_OCInitTypeDef TIM_OCBaseInitStruct_T3;
 
-    TIM_OCInitTypeDef TIM_OCBaseInitStruct_T3;
-	TIM_OCBaseInitStruct_T3.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_TimeBaseInitStruct_T3.TIM_Prescaler = 89;
+	TIM_TimeBaseInitStruct_T3.TIM_Period = 49;
+	TIM_TimeBaseInitStruct_T3.TIM_ClockDivision = TIM_CKD_DIV1;
+	TIM_TimeBaseInitStruct_T3.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStruct_T3);
+
+	TIM_Cmd(TIM3, ENABLE);
+
+  	TIM_OCBaseInitStruct_T3.TIM_OutputState = TIM_OutputState_Enable;
 	TIM_OCBaseInitStruct_T3.TIM_Pulse = duty_cycle1;
 	TIM_OCBaseInitStruct_T3.TIM_OCMode = TIM_OCMode_PWM1;
 	TIM_OCBaseInitStruct_T3.TIM_OCPolarity = TIM_OCPolarity_High;
@@ -249,6 +257,8 @@ void EXTI2_IRQHandler()
 
 void INIT_IO_PRACTICA_1(){
 	  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+	  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
 	  //INPUTS
