@@ -9,7 +9,15 @@
  * Inicialitza el LCD, SDRAM i tot allò que faci falta
  */
 void LCD_initialize(){
-
+	LCD_Init();
+	LCD_LayerInit();
+	//LCD_SPIConfig(); /YA LO HACE LCD_INIT??
+	//SDRAM_Init(); //YA LO HACE LCD_INIT??
+	//FMC_SDRAMWriteProtectionConfig(FMC_Bank2_SDRAM,DISABLE); //COMENTADO PORQUE LA FUNCIÓN DE WRITE YA LO HACE SOLO.
+/*
+ * 	LCD_SetLayer(LCD_FOREGROUND_LAYER);
+	LCD_DrawRect(120,120,20,20);
+ */
 }
 
 /*

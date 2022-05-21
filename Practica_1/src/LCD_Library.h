@@ -10,6 +10,8 @@
 #include <DMA_usart_config.h>
 #include <stm32f429i_discovery_lcd.h>
 #include <stm32f429i_discovery_sdram.h>
+#include "stm32f4xx_fmc.h"
+
 typedef enum {
 	NO_OK = 0,
 	OK = !NO_OK

@@ -438,6 +438,7 @@ int main(void)
   TIM_INT_Init();
   PWM_Init();
   Velocity_Init();
+  LCD_initialize();
   /* Infinite loop */
   while (1)
   {
