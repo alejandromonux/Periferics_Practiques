@@ -9,10 +9,8 @@
 /* Includes */
 //#include "stm32f4xx.h"
 //#include "stm32f429i_discovery.h"
-#include <DMA_usart_config.h>
+#include <LCD_Library.h>
 #include <math.h>
-#include <stm32f429i_discovery_lcd.h>
-#include <stm32f429i_discovery_sdram.h>
 
 #define MAXINTVALUE 	4294967295
 #define TIME_MAGNITUTE_DENOMINATOR 1000000
@@ -269,7 +267,7 @@ int getRevs(int intIndex){
 			periodMS[intIndex] = value - periodMS[intIndex];
 		}
 		float auxiliar = (1/(16*(periodMS[intIndex]/(float)TIME_MAGNITUTE_DENOMINATOR)));
-		int output = ceil(auxiliar); //(int)(auxiliar*1000); //Calculem revolucions
+		int output = round(auxiliar); //(int)(auxiliar*1000); //Calculem revolucions
 		//Lo anterior lo hemos puesto sin el *1000 porque ya sale un num l�gico, digamos. Antes la resoluci�n era de ms y ahora es de us
 		calcDebug[intIndex][calcDebugCounter[intIndex]] = output;
 		periodMS[intIndex] = value;
