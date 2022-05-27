@@ -37,6 +37,12 @@ typedef enum {
 #define PURPLE_G 50
 #define PURPLE_B 217
 
+#define N_COL	1024
+#define N_FIL 768
+uint16_t *frame_buffer;
+
+
+
 void LCD_initialize();
 RetSt SetPixel (uint16_t col, uint16_t fila, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval );
 uint32_t GetPixel (uint16_t col, uint16_t fila);

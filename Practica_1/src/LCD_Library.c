@@ -10,7 +10,15 @@
  */
 void LCD_initialize(){
 	LCD_Init();
+	LTDC_Cmd(ENABLE);
+	LCD_DisplayOn();
 	LCD_LayerInit();
+	LTDC_LayerPixelFormat(LTDC_Layer1, LTDC_Pixelformat_ARGB4444);
+	LTDC_ReloadConfig(LTDC_VBReload);
+	LCD_SetLayer(LCD_BACKGROUND_LAYER);
+	LCD_Clear(LCD_COLOR_WHITE); //TODO: Cambiarlo por el esborra_LCD
+
+
 	//LCD_SPIConfig(); /YA LO HACE LCD_INIT??
 	//SDRAM_Init(); //YA LO HACE LCD_INIT??
 	//FMC_SDRAMWriteProtectionConfig(FMC_Bank2_SDRAM,DISABLE); //COMENTADO PORQUE LA FUNCIÓN DE WRITE YA LO HACE SOLO.
@@ -25,7 +33,14 @@ void LCD_initialize(){
  *
  * Returns: OK si funciona, NO_OK si no.
  */
-RetSt SetPixel (uint16_t col, uint16_t fila, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){}
+RetSt SetPixel (uint16_t col, uint16_t fila, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval )
+{
+	uint16_t color = ((alfa) << 24) | ((Rval) << 16) | ((Gval) << 8) | (Bval);
+	if (col >= N_COL || fila >= N_FIL)
+		return (ERROR);
+	frame_buffer[col + fila*LCD_PIXEL_WIDTH]= color;
+	return (OK);
+}
 
 /*
  * Retorna el valor del pixel a [col, fila].

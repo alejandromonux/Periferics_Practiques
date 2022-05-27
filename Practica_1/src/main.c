@@ -411,6 +411,7 @@ void initLCD(void){
 
 int main(void)
 {
+	frame_buffer = (uint16_t *)(SDRAM_BANK_ADDR + BUFFER_OFFSET);
 	currentScaler1 = periodScaler1;
 	currentScaler2 = periodScaler2;
 	periodVelocity1 = initPeriodVelocity*periodScaler1;
@@ -442,6 +443,11 @@ int main(void)
   /* Infinite loop */
   while (1)
   {
+	  for(int i = 0; i < 200 ;i++){
+		  for(int j = 0; j < 200 ;j++){
+			  	  SetPixel(i,j,0,16,16,16);
+		  	  }
+	  }
 	  if(periodScaler1!=currentScaler1 || periodScaler2!=currentScaler2){
 		  periodVelocity1 = initPeriodVelocity*periodScaler1;
 		  periodVelocity2 = initPeriodVelocity*periodScaler2;
