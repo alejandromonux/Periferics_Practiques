@@ -83,7 +83,7 @@ RetSt DibuixaLiniaVertical (uint16_t col, uint16_t fila_inici, uint16_t fila_fi,
 RetSt DibuixaCircumferencia (uint16_t ccol, uint16_t cfila, uint16_t radi, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){
 	int x, y;
 	float pi = 3.1415;
-	for(int i = 0; i<2*pi;i = i+pi/50){
+	for(float i = 0; i<2*pi;i = i+pi/100){
 		x = radi*cos(i)+ccol;
 		y = radi*sin(i)+cfila;
 		SetPixel(x,y,alfa,Rval,Gval,Bval);
@@ -102,4 +102,6 @@ RetSt EsborraPantalla (uint8_t Rval, uint8_t Gval, uint8_t Bval ){
 		  	  }
 	  }
 }
+
+
 
