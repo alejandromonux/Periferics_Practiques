@@ -37,8 +37,8 @@ typedef enum {
 #define PURPLE_G 50
 #define PURPLE_B 217
 
-#define N_COL 320
-#define N_FIL 240
+#define N_COL 240
+#define N_FIL 320
 uint16_t *frame_buffer;
 
 
