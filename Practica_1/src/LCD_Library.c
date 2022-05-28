@@ -56,21 +56,45 @@ uint32_t GetPixel (uint16_t col, uint16_t fila){
  *
  * Returns: OK si funciona, NO_OK si no.
  */
-RetSt DibuixaLiniaHoritzontal (uint16_t col_inici, uint16_t col_fi, uint16_t fila, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){}
+/*
+ * Dibuixa una línia entre [col_inici, fila] fins a [col_fi, fila] amb els valors ARGB entrats.
+ *
+ * Returns: OK si funciona, NO_OK si no.
+ */
+RetSt DibuixaLiniaHoritzontal (uint16_t col_inici, uint16_t col_fi, uint16_t fila, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){
+	for(int i = col_inici; i<=col_fi; i++){
+		SetPixel(i,file,alfa,Rval,Gval,Bval);
+	}
+	return(OK);
+}
 
 /*
  * Dibuixa una línia entre [col, fila_inici] fins a [col, fila_fi] amb els valors ARGB entrats.
  *
  * Returns: OK si funciona, NO_OK si no.
  */
-RetSt DibuixaLiniaVertical (uint16_t col, uint16_t fila_inici, uint16_t fila_fi, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){}
-
+RetSt DibuixaLiniaVertical (uint16_t col, uint16_t fila_inici, uint16_t fila_fi, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){
+	for(int i = fila_inici; i<=fila_fi; i++){
+		SetPixel(col,i,alfa,Rval,Gval,Bval);
+	}
+	return(OK);
+}
 /*
  * Dibuixa una circumferència amb centre [col, fila] i radi [radi]
  *
  * Returns: OK si funciona, NO_OK si no.
  */
-RetSt DibuixaCircumferencia (uint16_t ccol, uint16_t cfila, uint16_t radi, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){}
+RetSt DibuixaCircumferencia (uint16_t ccol, uint16_t cfila, uint16_t radi, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){
+	int x, y;
+	for(int alpha = 0; alpha<360;alpha++){
+		x = ccol+sqrt(pow(radi*sin(alpha),2)+radi*cfila*sin(alpha)+pow(radi,2));
+		y = cfila+sqrt(pow(radi*sin(alpha),2)+radi*ccol*sin(alpha)+pow(radi,2));
+		SetPixel(x,y,alfa,Rval,Gval,Bval);
+		x = ccol-sqrt(pow(radi*sin(alpha),2)+radi*cfila*sin(alpha)+pow(radi,2));
+		y = cfila-sqrt(pow(radi*sin(alpha),2)+radi*ccol*sin(alpha)+pow(radi,2));
+		SetPixel(x,y,alfa,Rval,Gval,Bval);
+	}
+}
 
 /*
  * Esborra els píxels del color seleccionat de la pantalla
