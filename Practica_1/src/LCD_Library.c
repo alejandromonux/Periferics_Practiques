@@ -85,7 +85,7 @@ RetSt DibuixaLiniaVertical (uint16_t col, uint16_t fila_inici, uint16_t fila_fi,
 RetSt DibuixaCircumferencia (uint16_t ccol, uint16_t cfila, uint16_t radi, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){
 	int x, y;
 	float pi = 3.1415;
-	for(float i = 0; i<2*pi;i = i+pi/100){
+	for(float i = 0; i<2*pi;i = i+pi/1000){
 		x = radi*cos(i)+ccol;
 		y = radi*sin(i)+cfila;
 		SetPixel(x,y,alfa,Rval,Gval,Bval);
@@ -106,6 +106,12 @@ RetSt EsborraPantalla (uint8_t Rval, uint8_t Gval, uint8_t Bval ){
 }
 
 RetSt DibuixaEstructura(){
+	#define RADI_BASE 24
+	DibuixaCircumferencia(120,120,RADI_BASE,  0,25,20,24);
+	DibuixaCircumferencia(120,120,RADI_BASE*2,0,25,20,24);
+	DibuixaCircumferencia(120,120,RADI_BASE*3,0,25,20,24);
+	DibuixaCircumferencia(120,120,RADI_BASE*4,0,25,20,24);
+
 	//Grid General
 	DibuixaLiniaVertical(120, 0,N_FIL,0,12,3,5);
 	DibuixaLiniaVertical(240, 0,N_FIL,0,12,3,5);
@@ -120,6 +126,7 @@ RetSt PintaRecuadreEstructura(uint8_t Rval, uint8_t Gval, uint8_t Bval){
 	#define VD 310//Horitzontal Bottom
 	#define HT 20//Vertical Esquerra
 	#define HB 60//Vertical Dreta
+
 	DibuixaLiniaVertical(VE, HT,HB,0,12,3,5);
 	DibuixaLiniaVertical(VD, HT,HB,0,12,3,5);
 	DibuixaLiniaHoritzontal(HT, VE,VD,0,12,3,5);
