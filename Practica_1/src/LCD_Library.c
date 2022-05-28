@@ -75,6 +75,12 @@ RetSt DibuixaCircumferencia (uint16_t ccol, uint16_t cfila, uint16_t radi, uint8
  *
  * Returns: OK si funciona, NO_OK si no.
  */
-RetSt EsborraPantalla (uint8_t Rval, uint8_t Gval, uint8_t Bval ){}
+RetSt EsborraPantalla (uint8_t Rval, uint8_t Gval, uint8_t Bval ){
+	  for(int i = 0; i < N_COL;i++){
+		  for(int j = 0; j < N_FIL ;j++){
+			  	  SetPixel(i,j,0,Rval,Gval,Bval);
+		  	  }
+	  }
+}
 
 
