@@ -14,7 +14,7 @@ void LCD_initialize(){
 	LTDC_Cmd(ENABLE);
 	LCD_DisplayOn();
 	LCD_LayerInit();
-	LTDC_LayerPixelFormat(LTDC_Layer1, LTDC_Pixelformat_ARGB4444);
+	LTDC_LayerPixelFormat(LTDC_Layer1, LTDC_Pixelformat_ARGB1555);
 	LTDC_ReloadConfig(LTDC_VBReload);
 	LCD_SetLayer(LCD_BACKGROUND_LAYER);
 	LCD_Clear(LCD_COLOR_WHITE); //TODO: Cambiarlo por el esborra_LCD
@@ -32,14 +32,16 @@ void LCD_initialize(){
 /*
  * Dibuixa a [col,fila] el píxel amb el valor [alfa, Rval, Gbal, Bval]
  *
+ * Nota: Columna i fila van al revés
  * Returns: OK si funciona, NO_OK si no.
  */
 RetSt SetPixel (uint16_t col, uint16_t fila, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval )
 {
-	uint16_t color = ((alfa) << 16) | ((Rval) << 8) | ((Gval) << 4) | (Bval);
+	//ARGB1555
+	uint16_t color = ((alfa) << 15) | ((Rval) << 10) | ((Gval) << 5) | (Bval);
 	if (col >= N_COL || fila >= N_FIL)
 		return (ERROR);
-	frame_buffer[col + fila*LCD_PIXEL_WIDTH]= color;
+	frame_buffer[(N_COL-col) + fila*LCD_PIXEL_WIDTH]= color;
 	return (OK);
 }
 
@@ -57,9 +59,9 @@ uint32_t GetPixel (uint16_t col, uint16_t fila){
  *
  * Returns: OK si funciona, NO_OK si no.
  */
-RetSt DibuixaLiniaHoritzontal (uint16_t col_inici, uint16_t col_fi, uint16_t fila, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){
+RetSt DibuixaLiniaHoritzontal (uint16_t fila, uint16_t col_inici, uint16_t col_fi, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){
 	for(int i = col_inici; i<=col_fi; i++){
-		SetPixel(i,fila,alfa,Rval,Gval,Bval);
+		SetPixel(fila,i,alfa,Rval,Gval,Bval);
 	}
 	return(OK);
 }
@@ -71,7 +73,7 @@ RetSt DibuixaLiniaHoritzontal (uint16_t col_inici, uint16_t col_fi, uint16_t fil
  */
 RetSt DibuixaLiniaVertical (uint16_t col, uint16_t fila_inici, uint16_t fila_fi, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){
 	for(int i = fila_inici; i<=fila_fi; i++){
-		SetPixel(col,i,alfa,Rval,Gval,Bval);
+		SetPixel(i,col,alfa,Rval,Gval,Bval);
 	}
 	return(OK);
 }
@@ -103,5 +105,32 @@ RetSt EsborraPantalla (uint8_t Rval, uint8_t Gval, uint8_t Bval ){
 	  }
 }
 
+RetSt DibuixaEstructura(){
+	//Grid General
+	DibuixaLiniaVertical(120, 0,N_FIL,0,12,3,5);
+	DibuixaLiniaVertical(240, 0,N_FIL,0,12,3,5);
+	DibuixaLiniaHoritzontal(120, 0,240,0,12,3,5);
+	//Cuadre
+	PintaRecuadreEstructura(GREEN_R,GREEN_G,GREEN_B);
+	return OK;
+}
 
+RetSt PintaRecuadreEstructura(uint8_t Rval, uint8_t Gval, uint8_t Bval){
+	#define VE 250//Horitzontal Top
+	#define VD 310//Horitzontal Bottom
+	#define HT 20//Vertical Esquerra
+	#define HB 60//Vertical Dreta
+	DibuixaLiniaVertical(VE, HT,HB,0,12,3,5);
+	DibuixaLiniaVertical(VD, HT,HB,0,12,3,5);
+	DibuixaLiniaHoritzontal(HT, VE,VD,0,12,3,5);
+	DibuixaLiniaHoritzontal(HB, VE,VD,0,12,3,5);
+
+	//Emplenem
+	for(int i=HT+1;i<HB;i++){
+		for(int j=VE+1;j<VD;j++){
+			SetPixel(i,j,0,Rval,Gval,Bval);
+		}
+	}
+	return OK;
+}
 
