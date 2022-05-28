@@ -35,7 +35,7 @@ void LCD_initialize(){
  */
 RetSt SetPixel (uint16_t col, uint16_t fila, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval )
 {
-	uint16_t color = ((alfa) << 24) | ((Rval) << 16) | ((Gval) << 8) | (Bval);
+	uint16_t color = ((alfa) << 12) | ((Rval) << 8) | ((Gval) << 4) | (Bval);
 	if (col >= N_COL || fila >= N_FIL)
 		return (ERROR);
 	frame_buffer[col + fila*LCD_PIXEL_WIDTH]= color;
@@ -47,7 +47,9 @@ RetSt SetPixel (uint16_t col, uint16_t fila, uint8_t alfa, uint8_t Rval, uint8_t
  *
  * Returns: 32 bits de info del píxel. 16 HLb tenen 0xFFFF, els 16 LLb tenen info de ARGB.
  */
-uint32_t GetPixel (uint16_t col, uint16_t fila){}
+uint32_t GetPixel (uint16_t col, uint16_t fila){
+	return frame_buffer[col + fila*LCD_PIXEL_WIDTH];
+}
 
 /*
  * Dibuixa una línia entre [col_inici, fila] fins a [col_fi, fila] amb els valors ARGB entrats.
