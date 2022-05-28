@@ -5,6 +5,7 @@
  *      Author: a-mon
  */
 #include "LCD_Library.h"
+#include <math.h>;
 /*
  * Inicialitza el LCD, SDRAM i tot allò que faci falta
  */
@@ -35,7 +36,7 @@ void LCD_initialize(){
  */
 RetSt SetPixel (uint16_t col, uint16_t fila, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval )
 {
-	uint16_t color = ((alfa) << 12) | ((Rval) << 8) | ((Gval) << 4) | (Bval);
+	uint16_t color = ((alfa) << 16) | ((Rval) << 8) | ((Gval) << 4) | (Bval);
 	if (col >= N_COL || fila >= N_FIL)
 		return (ERROR);
 	frame_buffer[col + fila*LCD_PIXEL_WIDTH]= color;
@@ -56,14 +57,9 @@ uint32_t GetPixel (uint16_t col, uint16_t fila){
  *
  * Returns: OK si funciona, NO_OK si no.
  */
-/*
- * Dibuixa una línia entre [col_inici, fila] fins a [col_fi, fila] amb els valors ARGB entrats.
- *
- * Returns: OK si funciona, NO_OK si no.
- */
 RetSt DibuixaLiniaHoritzontal (uint16_t col_inici, uint16_t col_fi, uint16_t fila, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){
 	for(int i = col_inici; i<=col_fi; i++){
-		SetPixel(i,file,alfa,Rval,Gval,Bval);
+		SetPixel(i,fila,alfa,Rval,Gval,Bval);
 	}
 	return(OK);
 }
@@ -86,12 +82,10 @@ RetSt DibuixaLiniaVertical (uint16_t col, uint16_t fila_inici, uint16_t fila_fi,
  */
 RetSt DibuixaCircumferencia (uint16_t ccol, uint16_t cfila, uint16_t radi, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){
 	int x, y;
-	for(int alpha = 0; alpha<360;alpha++){
-		x = ccol+sqrt(pow(radi*sin(alpha),2)+radi*cfila*sin(alpha)+pow(radi,2));
-		y = cfila+sqrt(pow(radi*sin(alpha),2)+radi*ccol*sin(alpha)+pow(radi,2));
-		SetPixel(x,y,alfa,Rval,Gval,Bval);
-		x = ccol-sqrt(pow(radi*sin(alpha),2)+radi*cfila*sin(alpha)+pow(radi,2));
-		y = cfila-sqrt(pow(radi*sin(alpha),2)+radi*ccol*sin(alpha)+pow(radi,2));
+	float pi = 3.1415;
+	for(int i = 0; i<2*pi;i = i+pi/50){
+		x = radi*cos(i)+ccol;
+		y = radi*sin(i)+cfila;
 		SetPixel(x,y,alfa,Rval,Gval,Bval);
 	}
 }
@@ -108,5 +102,4 @@ RetSt EsborraPantalla (uint8_t Rval, uint8_t Gval, uint8_t Bval ){
 		  	  }
 	  }
 }
-
 
