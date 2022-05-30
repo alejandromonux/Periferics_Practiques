@@ -63,7 +63,7 @@ char isMostraPlena(){
 	uint8_t numDades= 0;
 	uint8_t * buffer = (bufferActual==0)?UsartIncomingThingies:UsartIncomingThingies2;
 	int i = 0;
-	for(i =anteriorFinal; numDades!=quantesDades;i++){
+	for(i =anteriorFinal; numDades!=2*quantesDades;i++){
 		//Mirem si no ens hem passat del tamany del buffer (igual al tamany de la cua
 		if(i>MAX_CUASIZE-1){
 			bufferActual = 1-bufferActual;
@@ -114,7 +114,7 @@ void emplenaIEncua(Data * array, unsigned int index){
 	array[index]->angleInicial=(lastDataRead[1]<<8)|lastDataRead[0];
 	array[index]->angleFinal=(lastDataRead[2]<<8)|lastDataRead[1];
 	array[index]->checksum=(lastDataRead[4]<<8)|lastDataRead[3];
-	for(int i = 0;MAX_DATASIZE;i++){
+	for(int i = 0;2*MAX_DATASIZE;i++){
 		if(lastDataRead[i]!='\0'){
 			array[index]->data[i] = lastDataRead[i];
 			i++;

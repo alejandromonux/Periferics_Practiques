@@ -19,7 +19,7 @@ typedef struct{
 	uint16_t angleInicial;
 	uint16_t angleFinal;
 	uint16_t checksum;
-	uint16_t data[MAX_DATASIZE]; //2 Bytes per mostra
+	uint8_t data[MAX_DATASIZE]; //2 Bytes per mostra
 }Data;
 Data * dataArray;
 unsigned int totalSize;
