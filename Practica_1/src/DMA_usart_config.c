@@ -59,7 +59,7 @@ char isMostraPlena(){
 	int bufferActual = anteriorBuffer;
 	uint8_t hemMiratInici=0;
 	uint8_t hemMiratNumDades=0;
-	uint8_t quantesDades=255; //FIXME:Mirar que no pueda ser 0 por l ode pillar valores anteriores al [6]
+	quantesDades=255; //FIXME:Mirar que no pueda ser 0 por l ode pillar valores anteriores al [6]
 	uint8_t numDades= 0;
 	uint8_t * buffer = (bufferActual==0)?UsartIncomingThingies:UsartIncomingThingies2;
 	int i = 0;
@@ -109,6 +109,11 @@ char isMostraPlena(){
 	return 1;
 }
 void emplenaIEncua(Data * array, unsigned int index){
+	array[index]->used=1;
+	array[index]->datasize=quantesDades;
+	array[index]->angleInicial=(lastDataRead[1]<<8)|lastDataRead[0];
+	array[index]->angleFinal=(lastDataRead[2]<<8)|lastDataRead[1];
+	array[index]->checksum=(lastDataRead[4]<<8)|lastDataRead[3];
 	for(int i = 0;MAX_DATASIZE;i++){
 		if(lastDataRead[i]!='\0'){
 			array[index]->data[i] = lastDataRead[i];
@@ -122,6 +127,7 @@ void emplenaIEncua(Data * array, unsigned int index){
 }
 Data desencua(){
 	posicio = (posicio+1)%MAX_CUASIZE;
+	pendingData--;
 	return dataArray[cua[posicio++]];
 }
 

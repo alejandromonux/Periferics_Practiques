@@ -16,13 +16,16 @@ unsigned int anteriorBuffer;
 typedef struct{
 	uint8_t used;
 	uint8_t datasize;
+	uint16_t angleInicial;
+	uint16_t angleFinal;
+	uint16_t checksum;
 	uint16_t data[MAX_DATASIZE]; //2 Bytes per mostra
 }Data;
 Data * dataArray;
 unsigned int totalSize;
 unsigned int pendingData;
-uint16_t lastDataRead[MAX_DATASIZE];
-
+uint8_t lastDataRead[MAX_DATASIZE];
+uint8_t quantesDades;
 /*pseudo-Cola buena para saber cuál printar ahora*/
 #define MAX_CUASIZE 512
 unsigned int posicio;
