@@ -7,7 +7,7 @@
 
 #ifndef LCD_LIBRARY_H_
 #define LCD_LIBRARY_H_
-#include <DMA_usart_config.h>
+#include <DATA_processing.h>
 #include <stm32f429i_discovery_lcd.h>
 #include <stm32f429i_discovery_sdram.h>
 #include "stm32f4xx_fmc.h"
