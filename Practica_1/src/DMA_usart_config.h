@@ -19,13 +19,14 @@ typedef struct{
 	uint16_t angleInicial;
 	uint16_t angleFinal;
 	uint16_t checksum;
-	uint8_t data[MAX_DATASIZE]; //2 Bytes per mostra
+	uint8_t data[2*MAX_DATASIZE]; //2 Bytes per mostra
 }Data;
 Data * dataArray;
 unsigned int totalSize;
 unsigned int pendingData;
 uint8_t lastDataRead[MAX_DATASIZE];
 uint8_t quantesDades;
+float sample_frequency;
 /*pseudo-Cola buena para saber cuál printar ahora*/
 #define MAX_CUASIZE 512
 unsigned int posicio;
@@ -34,5 +35,6 @@ unsigned int indexCua; //Pot ser que el index doni la volta i avanci la posició?
 
 
 void configUsart(int dataAmount);
+Data desencua();
 
 #endif

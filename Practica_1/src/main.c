@@ -408,6 +408,27 @@ void initLCD(void){
 	LCD_Init();
 }
 
+void mostrarLCD(Mesura* mesures){
+
+}
+
+void processaIMostraDades(){
+	Data dadesAMostrar = desencua();
+	if (dadesAMostrar.checksum == getChecksum(data)){
+		float incrementA = getIncrementAngles();
+		float angleInicial = getAngle(data.angleInicial);
+		float angleFinal = getAngle(data.angleFinal);
+		Mesura *mesures = (Mesura *) malloc(sizeof(Mesura)*data.datasize);
+		int mesuresCounter=0;
+		for (int i = 0;i<2*data.datasize;i+2){
+			mesures[mesuresCounter++] = getMesura(Data,i,incrementA);
+		}
+		mostrarLCD(mesures);
+		free(mesures);
+	}
+}
+
+
 
 int main(void)
 {
@@ -440,14 +461,11 @@ int main(void)
   PWM_Init();
   Velocity_Init();
   LCD_initialize();
+  DibuixaEstructura();
   /* Infinite loop */
   while (1)
   {
-	  for(int i = 0; i < 200 ;i++){
-		  for(int j = 0; j < 200 ;j++){
-			  	  SetPixel(i,j,0,16,16,16);
-		  	  }
-	  }
+	  if(pendingData!=0) processaIMostraDades();
 	  if(periodScaler1!=currentScaler1 || periodScaler2!=currentScaler2){
 		  periodVelocity1 = initPeriodVelocity*periodScaler1;
 		  periodVelocity2 = initPeriodVelocity*periodScaler2;
@@ -478,6 +496,8 @@ int main(void)
 
   }
 }
+
+
 
 /*
  * Callback used by stm324xg_eval_i2c_ee.c.

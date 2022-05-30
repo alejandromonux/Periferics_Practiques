@@ -44,7 +44,7 @@ void configUsart(int dataAmount){
 	/* CONFIGURACIÓN PARA EL TX (STREAM 7) */
 
 	/*Configurem la memòria dinàmica*/
-	data = (Data *) malloc(sizeof(Data));
+	dataArray = (Data *) malloc(sizeof(Data));
 	pendingData = 0;
 	totalSize = 1;
 	anteriorFinal=0;
@@ -92,6 +92,11 @@ char isMostraPlena(){
 
 		if(hemMiratNumDades<6){
 			//Apuntem quantes Mostres
+			if((hemMiratNumDades==5)&&(buffer[i]&0x0001==1)){
+				//Això es per a que quan surti la mostra inicial no la guardem i només agafem la frecuència de mostres
+				sample_frequency = getSampleFrequency(buffer[i]);
+				hemMiratInici=0;
+			}
 			quantesDades= buffer[i];
 			hemMiratNumDades++;
 		}else{
@@ -100,7 +105,7 @@ char isMostraPlena(){
 		}
 	}
 	//Comprovem bé que no llegim res de brutícia per lo de canviar de buffer o que hagi saltat el interrupt amb només el 0x40 guardat
-	if (hemMiratIinici==0){
+	if (hemMiratInici==0){
 		return 0;
 	}else if(quantesDades!=255){
 		lastDataRead[numDades]='\0'; //AIXÍ SABEM FINS ON LLEGIR
@@ -109,14 +114,14 @@ char isMostraPlena(){
 	return 1;
 }
 void emplenaIEncua(Data * array, unsigned int index){
-	array[index]->used=1;
-	array[index]->datasize=quantesDades;
-	array[index]->angleInicial=(lastDataRead[1]<<8)|lastDataRead[0];
-	array[index]->angleFinal=(lastDataRead[2]<<8)|lastDataRead[1];
-	array[index]->checksum=(lastDataRead[4]<<8)|lastDataRead[3];
+	array[index].used=1;
+	array[index].datasize=quantesDades;
+	array[index].angleInicial=(lastDataRead[1]<<8)|lastDataRead[0];
+	array[index].angleFinal=(lastDataRead[2]<<8)|lastDataRead[1];
+	array[index].checksum=(lastDataRead[4]<<8)|lastDataRead[3];
 	for(int i = 0;2*MAX_DATASIZE;i++){
 		if(lastDataRead[i]!='\0'){
-			array[index]->data[i] = lastDataRead[i];
+			array[index].data[i] = lastDataRead[i];
 			i++;
 		}else{
 			break;

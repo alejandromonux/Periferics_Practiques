@@ -17,8 +17,9 @@ typedef struct{
 float getSampleFrequency(uint8_t data);
 float getAngle(uint16_t data);
 float getDiferenciaAngles(Data data);
+float getIncrementAngles(Data data);
 uint16_t getChecksum(Data data);
 float getAngleMostra(uint16_t numMostra);
-Mesura getMesura(uint16_t data, uint16_t numMostra, float angleIncrement);
+Mesura getMesura(Data data, uint16_t numMostra, float angleIncrement);
 
 #endif /* DATA_PROCESSING_H_ */
