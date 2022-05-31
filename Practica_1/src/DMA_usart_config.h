@@ -3,8 +3,11 @@
 
 #include "stm32f4xx.h"
 #include "stm32f429i_discovery.h"
-
-
+#include <stm32f429i_discovery_lcd.h>
+#include <stm32f429i_discovery_sdram.h>
+#include "stm32f4xx_fmc.h"
+#include <stdlib.h>
+#include <DATA_processing.h>
 
 #define DMA_REGISTERBOUNDARY_ADDRESS     ((uint32_t)0x40011000) /*IGUAL NO ESTÁ BIEN. SACADO DE	PAG 89 DEL DATASHEET*/
 __IO uint8_t UsartIncomingThingies[512]; //Cosicas
@@ -12,15 +15,6 @@ __IO uint8_t UsartIncomingThingies2[512];
 unsigned int anteriorFinal;
 unsigned int anteriorBuffer;
 /*Arrays donde guardaremos la info*/
-#define MAX_DATASIZE 255
-typedef struct{
-	uint8_t used;
-	uint8_t datasize;
-	uint16_t angleInicial;
-	uint16_t angleFinal;
-	uint16_t checksum;
-	uint8_t data[2*MAX_DATASIZE]; //2 Bytes per mostra
-}Data;
 Data * dataArray;
 unsigned int totalSize;
 unsigned int pendingData;

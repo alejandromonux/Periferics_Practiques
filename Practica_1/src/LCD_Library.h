@@ -7,10 +7,8 @@
 
 #ifndef LCD_LIBRARY_H_
 #define LCD_LIBRARY_H_
-#include <DATA_processing.h>
-#include <stm32f429i_discovery_lcd.h>
-#include <stm32f429i_discovery_sdram.h>
-#include "stm32f4xx_fmc.h"
+#include <DMA_usart_config.h>
+
 
 typedef enum {
 	NO_OK = 0,

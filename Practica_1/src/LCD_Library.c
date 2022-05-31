@@ -5,7 +5,7 @@
  *      Author: a-mon
  */
 #include "LCD_Library.h"
-#include <math.h>;
+
 /*
  * Inicialitza el LCD, SDRAM i tot allò que faci falta
  */

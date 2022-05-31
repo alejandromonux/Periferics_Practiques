@@ -92,7 +92,7 @@ char isMostraPlena(){
 
 		if(hemMiratNumDades<6){
 			//Apuntem quantes Mostres
-			if((hemMiratNumDades==5)&&(buffer[i]&0x0001==1)){
+			if((hemMiratNumDades==5)&&((buffer[i]&0x0001)==1)){
 				//Això es per a que quan surti la mostra inicial no la guardem i només agafem la frecuència de mostres
 				sample_frequency = getSampleFrequency(buffer[i]);
 				hemMiratInici=0;
@@ -146,7 +146,7 @@ void DMA2_Stream5_IRQHandler()
 		if (pendingData == totalSize){
 			//Realloc
 			dataArray = (Data *) realloc(dataArray, sizeof(Data)*(++totalSize));
-			emplenaIencua(dataArray, totalSize-1);
+			emplenaIEncua(dataArray, totalSize-1);
 		}else{
 			for(unsigned int i = 0; i<totalSize;){
 				/*Mirar si nos da para los datos actuales o no*/
@@ -154,7 +154,7 @@ void DMA2_Stream5_IRQHandler()
 					i++;
 				}else{
 					//Ficar dades i assignar posicio de la cua
-					emplenaIencua(dataArray,i);
+					emplenaIEncua(dataArray,i);
 				}
 			}
 		}

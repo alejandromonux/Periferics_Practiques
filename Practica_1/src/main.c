@@ -414,14 +414,14 @@ void mostrarLCD(Mesura* mesures){
 
 void processaIMostraDades(){
 	Data dadesAMostrar = desencua();
-	if (dadesAMostrar.checksum == getChecksum(data)){
-		float incrementA = getIncrementAngles();
-		float angleInicial = getAngle(data.angleInicial);
-		float angleFinal = getAngle(data.angleFinal);
-		Mesura *mesures = (Mesura *) malloc(sizeof(Mesura)*data.datasize);
+	if (dadesAMostrar.checksum == getChecksum(dadesAMostrar)){
+		float incrementA = getIncrementAngles(dadesAMostrar);
+		float angleInicial = getAngle(dadesAMostrar.angleInicial);
+		float angleFinal = getAngle(dadesAMostrar.angleFinal);
+		Mesura *mesures = (Mesura *) malloc(sizeof(Mesura)*dadesAMostrar.datasize);
 		int mesuresCounter=0;
-		for (int i = 0;i<2*data.datasize;i+2){
-			mesures[mesuresCounter++] = getMesura(Data,i,incrementA);
+		for (int i = 0;i<2*dadesAMostrar.datasize;i+=2){
+			mesures[mesuresCounter++] = getMesura(dadesAMostrar,i,incrementA);
 		}
 		mostrarLCD(mesures);
 		free(mesures);
