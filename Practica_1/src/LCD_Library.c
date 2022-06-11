@@ -118,6 +118,7 @@ RetSt DibuixaEstructura(){
 	DibuixaLiniaHoritzontal(120, 0,240,0,12,3,5);
 	//Cuadre
 	PintaRecuadreEstructura(GREEN_R,GREEN_G,GREEN_B);
+	LCD_SetLayer(LCD_FOREGROUND_LAYER);
 	return OK;
 }
 
