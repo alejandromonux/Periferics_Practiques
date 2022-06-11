@@ -1,4 +1,5 @@
 #include <DMA_usart_config.h>
+uint8_t hemMiratInici=0;
 
 void configUsart(int dataAmount){
 	DMA_InitTypeDef DMA_InitStructure;
@@ -34,7 +35,7 @@ void configUsart(int dataAmount){
 	NVIC_InitTypeDef NVIC_InitStruct;
 	NVIC_InitStruct.NVIC_IRQChannel = DMA2_Stream5_IRQn;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0X00;
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0X01;
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0X00;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStruct);
 	/*Enable de la DMA con USART*/
@@ -45,6 +46,7 @@ void configUsart(int dataAmount){
 
 	/*Configurem la memòria dinàmica*/
 	dataArray = (Data *) malloc(sizeof(Data));
+	dataArray[0].used=0;
 	pendingData = 0;
 	totalSize = 1;
 	anteriorFinal=0;
@@ -57,13 +59,14 @@ void configUsart(int dataAmount){
 char isMostraPlena(){
 	//TODO: Potser podem guardar aquí en un array auxiliar la mostra i passarla al emplena i encua sense tant embolic
 	int bufferActual = anteriorBuffer;
-	uint8_t hemMiratInici=0;
+	hemMiratInici=0;
 	uint8_t hemMiratNumDades=0;
 	quantesDades=255; //FIXME:Mirar que no pueda ser 0 por l ode pillar valores anteriores al [6]
-	uint8_t numDades= 0;
+	int16_t numDades= 0;
 	uint8_t * buffer = (bufferActual==0)?UsartIncomingThingies:UsartIncomingThingies2;
+	uint8_t inicial = 0;
 	int i = 0;
-	for(i =anteriorFinal; numDades!=2*quantesDades;i++){
+	for(i =anteriorFinal; numDades-6/*-6 que son los extras de angulos y checksum*/<2*quantesDades;i++){
 		//Mirem si no ens hem passat del tamany del buffer (igual al tamany de la cua
 		if(i>MAX_CUASIZE-1){
 			bufferActual = 1-bufferActual;
@@ -74,7 +77,7 @@ char isMostraPlena(){
 		//Mirem si tenim mostra sencera (
 		//Realment si canvia de buffer no passa res perque son adreçes contígues. PERÒ potser mirar de com fer per si no ho fossin perque si es del 2 al 1 cagada
 		//Mirem més tard que no hagi saltat el interrupt amb només el 0x40 guardat [linia 102]
-		if((buffer[i]==0x40)&&(buffer[i+1]==0x81) ){
+		if((buffer[i+1]==0x40)&&(buffer[i]==0x81) ){
 			if((!hemMiratInici)){
 				hemMiratInici=1;
 			}else if (numDades==quantesDades){
@@ -92,40 +95,55 @@ char isMostraPlena(){
 
 		if(hemMiratNumDades<6){
 			//Apuntem quantes Mostres
-			if((hemMiratNumDades==5)&&((buffer[i]&0x0001)==1)){
+			if((hemMiratNumDades==4)&&((buffer[i]&0x0001)==1)&&(sample_frequency == 0)){
 				//Això es per a que quan surti la mostra inicial no la guardem i només agafem la frecuència de mostres
-				sample_frequency = getSampleFrequency(buffer[i]);
+				uint8_t valor = buffer[i];
+				sample_frequency = getSampleFrequency(valor);
 				hemMiratInici=0;
+				numDades = 0; //Lo reiniciamos para que cuando entremos después de la inicial
+				//FIXME: Con esto no miramos el CRC de la inicial, mal?
+				i=anteriorFinal+13; //13 y no 14 porque luego hace el +1 y pasa a 14 que es ya la primera trama
+				hemMiratNumDades=0;
+			}else{
+				quantesDades= buffer[i];
+				hemMiratNumDades++;
 			}
-			quantesDades= buffer[i];
-			hemMiratNumDades++;
 		}else{
 			//Anem emplenant l'array
-			lastDataRead[numDades++]=buffer[i];
+			lastDataRead[numDades]=buffer[i];
+			if(numDades==492){
+				anteriorFinal=14;
+			}
+
+			numDades++;
 		}
 	}
 	//Comprovem bé que no llegim res de brutícia per lo de canviar de buffer o que hagi saltat el interrupt amb només el 0x40 guardat
 	if (hemMiratInici==0){
 		return 0;
-	}else if(quantesDades!=255){
+
+	}/*else if(quantesDades!=255){
 		lastDataRead[numDades]='\0'; //AIXÍ SABEM FINS ON LLEGIR
-	}
+	}*/
 	anteriorFinal=i;
+	anteriorBuffer=bufferActual;
 	return 1;
 }
 void emplenaIEncua(Data * array, unsigned int index){
 	array[index].used=1;
 	array[index].datasize=quantesDades;
-	array[index].angleInicial=(lastDataRead[1]<<8)|lastDataRead[0];
-	array[index].angleFinal=(lastDataRead[2]<<8)|lastDataRead[1];
-	array[index].checksum=(lastDataRead[4]<<8)|lastDataRead[3];
-	for(int i = 0;2*MAX_DATASIZE;i++){
-		if(lastDataRead[i]!='\0'){
-			array[index].data[i] = lastDataRead[i];
-			i++;
-		}else{
+	array[index].angleFinal=(lastDataRead[1]<<8)|lastDataRead[0];
+	array[index].angleInicial=(lastDataRead[3]<<8)|lastDataRead[2];
+	array[index].checksum=(lastDataRead[5]<<8)|lastDataRead[4];
+	uint16_t indexArray = 0;
+	for(int i = 6;indexArray < 2*quantesDades;i++){
+		//if(lastDataRead[i]!='\0'){
+			array[index].data[indexArray] = lastDataRead[i];
+			indexArray++;
+
+		/*}else{
 			break;
-		}
+		}*/
 	}
 	cua[indexCua]=index;
 	indexCua = (indexCua+1)%MAX_CUASIZE;
@@ -136,13 +154,9 @@ Data desencua(){
 	return dataArray[cua[posicio++]];
 }
 
-
-
-void DMA2_Stream5_IRQHandler()
-{
-	STM_EVAL_LEDToggle(LED4);
-	/*MIRAR SI LA MUESTRA ESTÁ LLENA*/
-	if(isMostraPlena()){
+void gestionaUsart(){
+	char isMostraFull = isMostraPlena();
+	if(isMostraFull){
 		if (pendingData == totalSize){
 			//Realloc
 			dataArray = (Data *) realloc(dataArray, sizeof(Data)*(++totalSize));
@@ -160,7 +174,15 @@ void DMA2_Stream5_IRQHandler()
 		}
 		pendingData++;
 	}
+}
 
+void DMA2_Stream5_IRQHandler()
+{
+	STM_EVAL_LEDToggle(LED4);
+	/*MIRAR SI LA MUESTRA ESTÁ LLENA*/
+	/*
+	*/
+	USART_Attention=1;
 	// Netejem la flag
 	DMA_ClearFlag(DMA2_Stream5, DMA_FLAG_TCIF5);
 	DMA_ClearITPendingBit(DMA2_Stream5, DMA_IT_TCIF5);

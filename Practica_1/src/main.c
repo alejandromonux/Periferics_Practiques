@@ -233,9 +233,22 @@ void TIM2_IRQHandler() //RSI Timer2
     	USART_SendData(USART1, COMANDA_INIT);
     	while(USART_GetFlagStatus(USART1, USART_FLAG_TXE)){}
     	USART_SendData(USART1, STARTSCAN_VALUE);
+    	/*		while(USART_GetFlagStatus(USART1, USART_FLAG_TXE)){}
+		USART_SendData(USART1, 'M');
+		while(USART_GetFlagStatus(USART1, USART_FLAG_TXE)){}
+		USART_SendData(USART1, 'M');
+		while(!USART_GetFlagStatus(USART1, USART_FLAG_RXNE)){
+			if(USART_GetFlagStatus(USART1, USART_FLAG_RXNE)){
+				  char cosabona= USART_ReceiveData(USART1);
+				  USART_SendData(USART1, cosabona);
+				  break;
+			}
+	    }*/
 		STM_EVAL_LEDOn(LED4);
+
 		configUsart(0);
     	startPulsado = 1;
+
     }
 
 	// Netejem la flag
@@ -394,7 +407,7 @@ void INIT_USART(void){
 	GPIO_PinAFConfig(GPIOA,GPIO_PinSource9,GPIO_AF_USART1);
 	GPIO_PinAFConfig(GPIOA,GPIO_PinSource10,GPIO_AF_USART1);
 
-	USART_InitStructure.USART_BaudRate = 128000 /*9600*/;
+	USART_InitStructure.USART_BaudRate =  9600/*9600 128000*/;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -432,7 +445,7 @@ void processaIMostraDades(){
 
 int main(void)
 {
-	frame_buffer = (uint16_t *)(SDRAM_BANK_ADDR + BUFFER_OFFSET);
+ 	frame_buffer = (uint16_t *)(SDRAM_BANK_ADDR + BUFFER_OFFSET);
 	currentScaler1 = periodScaler1;
 	currentScaler2 = periodScaler2;
 	periodVelocity1 = initPeriodVelocity*periodScaler1;
@@ -447,7 +460,7 @@ int main(void)
 	numOverflows[1] = 0;
 	numOverflowsOLD[0] = 0;
 	numOverflowsOLD[1] = 0;
-
+	USART_Attention = 0;
 
   INIT_IO_PRACTICA_1();
   STM_EVAL_LEDInit(LED3);
@@ -462,9 +475,11 @@ int main(void)
   Velocity_Init();
   LCD_initialize();
   DibuixaEstructura();
+
   /* Infinite loop */
   while (1)
   {
+	  if(USART_Attention==1) gestionaUsart();
 	  if(pendingData!=0) processaIMostraDades();
 	  if(periodScaler1!=currentScaler1 || periodScaler2!=currentScaler2){
 		  periodVelocity1 = initPeriodVelocity*periodScaler1;
@@ -493,7 +508,6 @@ int main(void)
 	                savedperiodScaler2 = 0;
 	            }
 	        }
-
   }
 }
 
