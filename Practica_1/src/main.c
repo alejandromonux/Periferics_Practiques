@@ -421,23 +421,27 @@ void initLCD(void){
 	LCD_Init();
 }
 
-void mostrarLCD(Mesura* mesures){
-
+void mostrarLCD(Mesura* mesures, uint8_t datasize){
+	for(int i = 0; i<datasize; i++){
+		SetReadedPixel(mesures[i].angle,mesures[i].distancia);
+	}
 }
-
 void processaIMostraDades(){
 	Data dadesAMostrar = desencua();
-	if (dadesAMostrar.checksum == getChecksum(dadesAMostrar)){
-		float incrementA = getIncrementAngles(dadesAMostrar);
-		float angleInicial = getAngle(dadesAMostrar.angleInicial);
-		float angleFinal = getAngle(dadesAMostrar.angleFinal);
-		Mesura *mesures = (Mesura *) malloc(sizeof(Mesura)*dadesAMostrar.datasize);
-		int mesuresCounter=0;
-		for (int i = 0;i<2*dadesAMostrar.datasize;i+=2){
-			mesures[mesuresCounter++] = getMesura(dadesAMostrar,i,incrementA);
+	if (((dadesAMostrar.tipus&0x0001)==1)&&(sample_frequency == 0)){
+		sample_frequency = getSampleFrequency(dadesAMostrar.data[4]);
+	}else{
+		/*TODO: YA MIRAREMOS ESTO. SE HA DE ARREGLAR EL CHECKSUM*/
+		if ((dadesAMostrar.checksum == getChecksum(dadesAMostrar))||(1/*TODO: YA MIRAREMOS ESTO. SE HA DE ARREGLAR EL CHECKSUM*/)){
+			float incrementA = getIncrementAngles(dadesAMostrar);
+			float angleInicial = getAngle(dadesAMostrar.angleInicial);
+			float angleFinal = getAngle(dadesAMostrar.angleFinal);
+			for (int i = 0;i<2*dadesAMostrar.datasize;i++){
+				Mesura mes = getMesura(dadesAMostrar,i,incrementA);
+				SetReadedPixel(mes.angle,mes.distancia);
+				i++;//Lo hago así para que se incremente dos veces a cada vuelta
+			}
 		}
-		mostrarLCD(mesures);
-		free(mesures);
 	}
 }
 
@@ -445,7 +449,7 @@ void processaIMostraDades(){
 
 int main(void)
 {
- 	frame_buffer = (uint16_t *)(SDRAM_BANK_ADDR + BUFFER_OFFSET);
+	frame_buffer = (uint16_t *)(SDRAM_BANK_ADDR + BUFFER_OFFSET);
 	currentScaler1 = periodScaler1;
 	currentScaler2 = periodScaler2;
 	periodVelocity1 = initPeriodVelocity*periodScaler1;

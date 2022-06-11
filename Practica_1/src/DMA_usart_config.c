@@ -1,5 +1,6 @@
 #include <DMA_usart_config.h>
 uint8_t hemMiratInici=0;
+uint8_t tipus=0;
 
 void configUsart(int dataAmount){
 	DMA_InitTypeDef DMA_InitStructure;
@@ -53,6 +54,100 @@ void configUsart(int dataAmount){
 	anteriorBuffer=0;
 }
 
+Data desencua(){
+	posicio = (posicio+1)%MAX_CUASIZE;
+	pendingData--;
+	return dataArray[cua[posicio/*++*/]];
+}
+
+char isMostraPlenaDeVerdad(){
+	int bufferActual = anteriorBuffer;
+	uint8_t hemMiratNumDades=0;
+	int16_t numDades= 0;
+	uint8_t * buffer = (bufferActual==0)?UsartIncomingThingies:UsartIncomingThingies2;
+	int i = 0;
+	quantesDades=255;
+	hemMiratInici=0;
+
+	for(i =anteriorFinal; numDades-6/*-6 que son los extras de angulos y checksum*/<2*quantesDades;i++){
+		//Mirem si no ens hem passat del tamany del buffer (igual al tamany de la cua
+		if(i>MAX_CUASIZE-1){
+			bufferActual = 1-bufferActual;
+			i=0;
+			buffer = (bufferActual==0)?UsartIncomingThingies:UsartIncomingThingies2;
+		}
+
+		//Mirem si tenim mostra sencera
+		if((buffer[i+1]==0x40)&&(buffer[i]==0x81)){
+			if((!hemMiratInici)){
+				hemMiratInici=1;
+				buffer[i+1]= 0x69;
+				buffer[i]= 0x69;
+			}else{
+				return 0; //FALSE
+			}
+		}
+
+
+		if(hemMiratNumDades<6){
+			if(hemMiratNumDades==4) tipus = buffer[i];
+			quantesDades= buffer[i];
+			hemMiratNumDades++;
+		}else{
+			//Anem emplenant l'array
+			lastDataRead[numDades]=buffer[i];
+			numDades++;
+		}
+	}
+
+	if (hemMiratInici==0){
+		return 0;
+	}
+
+	montaDadaIEncua();
+	anteriorFinal=i;
+	anteriorBuffer=bufferActual;
+	if((i<MAX_CUASIZE-1)&&(i+1<MAX_CUASIZE-1)){
+		if((buffer[i+1]==0x40)&&(buffer[i]==0x81)){
+			isMostraPlenaDeVerdad();
+		}
+	}
+	//Comprovem bé que no llegim res de brutícia per lo de canviar de buffer o que hagi saltat el interrupt amb només el 0x40 guardat
+	return 1;
+}
+
+void montaDadaIEncua(){
+	uint16_t indexArray = 0;
+
+	//Encuament
+	unsigned int posicioAEncuar = 0;
+	if (pendingData == totalSize){
+				//Realloc
+				dataArray = (Data *) realloc(dataArray, sizeof(Data)*(++totalSize));
+				posicioAEncuar=totalSize-1;
+	}else{
+		for(posicioAEncuar = 0; posicioAEncuar<totalSize;){
+			/*Mirar si nos da para los datos actuales o no*/
+			if(dataArray[posicioAEncuar].used==0)break;
+			posicioAEncuar++;
+		}
+	}
+
+	dataArray[posicioAEncuar].used=1;
+	dataArray[posicioAEncuar].datasize=quantesDades;
+	dataArray[posicioAEncuar].type = tipus;
+	dataArray[posicioAEncuar].angleFinal=(lastDataRead[1]<<8)|lastDataRead[0];
+	dataArray[posicioAEncuar].angleInicial=(lastDataRead[3]<<8)|lastDataRead[2];
+	dataArray[posicioAEncuar].checksum=(lastDataRead[5]<<8)|lastDataRead[4];
+	for(int i = 6;indexArray < 2*quantesDades;i++){
+		dataArray[posicioAEncuar].data[indexArray] = lastDataRead[i];
+		indexArray++;
+	}
+	cua[indexCua]=posicioAEncuar;
+	indexCua = (indexCua+1)%MAX_CUASIZE;
+	pendingData++;
+
+}
 
 //Es possible que arribin vàries mostres abans de que aquesta funció es faci per primer cop si arriben mostres però no
 //Plenen ningún dels dos buffers
@@ -119,16 +214,16 @@ char isMostraPlena(){
 		}
 	}
 	//Comprovem bé que no llegim res de brutícia per lo de canviar de buffer o que hagi saltat el interrupt amb només el 0x40 guardat
+	anteriorFinal=i;
+	anteriorBuffer=bufferActual;
 	if (hemMiratInici==0){
 		return 0;
-
 	}/*else if(quantesDades!=255){
 		lastDataRead[numDades]='\0'; //AIXÍ SABEM FINS ON LLEGIR
 	}*/
-	anteriorFinal=i;
-	anteriorBuffer=bufferActual;
 	return 1;
 }
+
 void emplenaIEncua(Data * array, unsigned int index){
 	array[index].used=1;
 	array[index].datasize=quantesDades;
@@ -140,7 +235,6 @@ void emplenaIEncua(Data * array, unsigned int index){
 		//if(lastDataRead[i]!='\0'){
 			array[index].data[indexArray] = lastDataRead[i];
 			indexArray++;
-
 		/*}else{
 			break;
 		}*/
@@ -148,12 +242,6 @@ void emplenaIEncua(Data * array, unsigned int index){
 	cua[indexCua]=index;
 	indexCua = (indexCua+1)%MAX_CUASIZE;
 }
-Data desencua(){
-	posicio = (posicio+1)%MAX_CUASIZE;
-	pendingData--;
-	return dataArray[cua[posicio++]];
-}
-
 void gestionaUsart(){
 	char isMostraFull = isMostraPlena();
 	if(isMostraFull){
@@ -183,7 +271,7 @@ void DMA2_Stream5_IRQHandler()
 	/*
 	*/
 	//USART_Attention=1;
-	gestionaUsart();
+	isMostraPlenaDeVerdad();
 	// Netejem la flag
 	DMA_ClearFlag(DMA2_Stream5, DMA_FLAG_TCIF5);
 	DMA_ClearITPendingBit(DMA2_Stream5, DMA_IT_TCIF5);

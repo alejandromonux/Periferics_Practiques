@@ -23,6 +23,7 @@ typedef struct{
 typedef struct{
 	uint8_t used;
 	uint8_t datasize;
+	uint8_t type;
 	uint16_t angleInicial;
 	uint16_t angleFinal;
 	uint16_t checksum;

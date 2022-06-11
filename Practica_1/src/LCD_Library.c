@@ -143,10 +143,10 @@ RetSt PintaRecuadreEstructura(uint8_t Rval, uint8_t Gval, uint8_t Bval){
 }
 RetSt SetReadedPixel(uint16_t radi, uint16_t degrees){
 	uint8_t Rval = 200;
-	uint8_t Gval = 0;
-	uint8_t Bval = 0;
-	double xvalue = acos(degrees)*radi+(N_COL/2);
-	double yvalue = asin(degrees)*radi+(N_FIL/2);
-	setPixel(xvalue, yvalue, 1, Rval, Gval, Bval);
+	uint8_t Gval = 150;
+	uint8_t Bval = 200;
+	uint16_t xvalue = cos(degrees)*radi+120;
+	uint16_t yvalue = sin(degrees)*radi+120;
+	SetPixel(xvalue, yvalue, 1, Rval, Gval, Bval);
 }
 

@@ -31,6 +31,8 @@ typedef enum {
 
 #define N_COL 240
 #define N_FIL 320
+//El cuadrado será de 240x240
+#define BOUNDS 240
 uint16_t *frame_buffer;
 
 

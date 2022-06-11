@@ -16,11 +16,11 @@ float getAngle(uint16_t data){
 
 float getIncrementAngles(Data data){
 	float angle_dif = getDiferenciaAngles(data);
-	return angle_dif/data.datasize;
+	return angle_dif/(data.datasize-1);
 }
 
 float getDiferenciaAngles(Data data){
-	float angle_dif = getAngle(data.angleInicial) - getAngle(data.angleFinal);
+	float angle_dif = getAngle(data.angleFinal) - getAngle(data.angleInicial);
 	if (angle_dif < 0) angle_dif += 360;
 	return angle_dif;
 }
@@ -28,8 +28,9 @@ float getDiferenciaAngles(Data data){
 uint16_t getChecksum(Data data){
 	uint16_t checksum = 0x8140;
 	checksum ^= data.angleFinal;
-	for (int i =0; i < 2*data.datasize; i+=2){
-		checksum ^= (uint16_t) (data.data[i]<<8|data.data[i]);
+	for (int i =0; i < 2*data.datasize; i++/*i+=2*/){
+		checksum ^= (uint16_t) (data.data[i+1]<<8|data.data[i]);
+		i++;
 	}
 	checksum ^= (uint16_t) ((data.datasize <<8) | (data.datasize&0x01));
 	checksum ^= data.angleInicial;
@@ -43,7 +44,7 @@ Mesura getMesura(Data data, uint16_t numMostra,float increment){
 	Mesura out;
 
 	out.angle = getAngleMostra(data.angleInicial,numMostra, increment);
-	out.distancia = (float) ((data.data[numMostra+1]<<8)|data.data[numMostra]);
+	out.distancia = ((float)((data.data[numMostra+1]<<8)|data.data[numMostra])/65535)*240;
 
 	return out;
 }
