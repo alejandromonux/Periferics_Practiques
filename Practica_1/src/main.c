@@ -479,7 +479,7 @@ int main(void)
   /* Infinite loop */
   while (1)
   {
-	  if(USART_Attention==1) gestionaUsart();
+	  //if(USART_Attention==1) gestionaUsart();
 	  if(pendingData!=0) processaIMostraDades();
 	  if(periodScaler1!=currentScaler1 || periodScaler2!=currentScaler2){
 		  periodVelocity1 = initPeriodVelocity*periodScaler1;

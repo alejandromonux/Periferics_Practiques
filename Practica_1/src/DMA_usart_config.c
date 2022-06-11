@@ -182,7 +182,8 @@ void DMA2_Stream5_IRQHandler()
 	/*MIRAR SI LA MUESTRA ESTÁ LLENA*/
 	/*
 	*/
-	USART_Attention=1;
+	//USART_Attention=1;
+	gestionaUsart();
 	// Netejem la flag
 	DMA_ClearFlag(DMA2_Stream5, DMA_FLAG_TCIF5);
 	DMA_ClearITPendingBit(DMA2_Stream5, DMA_IT_TCIF5);
