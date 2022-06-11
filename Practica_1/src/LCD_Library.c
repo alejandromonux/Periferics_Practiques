@@ -118,6 +118,7 @@ RetSt DibuixaEstructura(){
 	DibuixaLiniaHoritzontal(120, 0,240,0,12,3,5);
 	//Cuadre
 	PintaRecuadreEstructura(GREEN_R,GREEN_G,GREEN_B);
+	LCD_SetLayer(LCD_FOREGROUND_LAYER);
 	return OK;
 }
 
@@ -139,5 +140,13 @@ RetSt PintaRecuadreEstructura(uint8_t Rval, uint8_t Gval, uint8_t Bval){
 		}
 	}
 	return OK;
+}
+RetSt SetReadedPixel(uint16_t radi, uint16_t degrees){
+	uint8_t Rval = 200;
+	uint8_t Gval = 0;
+	uint8_t Bval = 0;
+	double xvalue = acos(degrees)*radi+(N_COL/2);
+	double yvalue = asin(degrees)*radi+(N_FIL/2);
+	setPixel(xvalue, yvalue, 1, Rval, Gval, Bval);
 }
 
