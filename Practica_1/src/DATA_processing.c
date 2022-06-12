@@ -26,13 +26,13 @@ float getDiferenciaAngles(Data data){
 }
 
 uint16_t getChecksum(Data data){
-	uint16_t checksum = 0x8140;
+	uint16_t checksum = 0xAA55;
 	checksum ^= data.angleFinal;
 	for (int i =0; i < 2*data.datasize; i++/*i+=2*/){
 		checksum ^= (uint16_t) (data.data[i+1]<<8|data.data[i]);
 		i++;
 	}
-	checksum ^= (uint16_t) ((data.datasize <<8) | (data.datasize&0x01));
+	checksum ^= (uint16_t) ((data.datasize <<8) | data.type);
 	checksum ^= data.angleInicial;
 	return checksum;
 }

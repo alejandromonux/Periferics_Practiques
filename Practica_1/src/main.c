@@ -428,14 +428,14 @@ void mostrarLCD(Mesura* mesures, uint8_t datasize){
 }
 void processaIMostraDades(){
 	Data dadesAMostrar = desencua();
-	if (((dadesAMostrar.tipus&0x0001)==1)&&(sample_frequency == 0)){
+	if (((dadesAMostrar.type&0x0001)==1)&&(sample_frequency == 0)){
 		sample_frequency = getSampleFrequency(dadesAMostrar.data[4]);
 	}else{
-		/*TODO: YA MIRAREMOS ESTO. SE HA DE ARREGLAR EL CHECKSUM*/
-		if ((dadesAMostrar.checksum == getChecksum(dadesAMostrar))||(1/*TODO: YA MIRAREMOS ESTO. SE HA DE ARREGLAR EL CHECKSUM*/)){
+		uint16_t checksum = getChecksum(dadesAMostrar);
+		if ((dadesAMostrar.checksum == checksum)){
 			float incrementA = getIncrementAngles(dadesAMostrar);
-			float angleInicial = getAngle(dadesAMostrar.angleInicial);
-			float angleFinal = getAngle(dadesAMostrar.angleFinal);
+			//float angleInicial = getAngle(dadesAMostrar.angleInicial);
+			//float angleFinal = getAngle(dadesAMostrar.angleFinal);
 			for (int i = 0;i<2*dadesAMostrar.datasize;i++){
 				Mesura mes = getMesura(dadesAMostrar,i,incrementA);
 				SetReadedPixel(mes.angle,mes.distancia);
