@@ -48,6 +48,8 @@ float currentScaler1 = 0;
 float currentScaler2 = 0;
 float savedperiodScaler1 = 0;
 float savedperiodScaler2 = 0;
+/*Variables de muestreo de datos*/
+float angleIniciPantalla = -1;
 /* Private function prototypes */
 /* Private functions */
 
@@ -433,6 +435,7 @@ void processaIMostraDades(){
 	}else{
 		uint16_t checksum = getChecksum(dadesAMostrar);
 		if ((dadesAMostrar.checksum == checksum)||(1)){
+			if(angleIniciPantalla==-1) angleIniciPantalla = getAngle(dadesAMostrar.angleInicial);
 			float incrementA = getIncrementAngles(dadesAMostrar);
 			//float angleInicial = getAngle(dadesAMostrar.angleInicial);
 			//float angleFinal = getAngle(dadesAMostrar.angleFinal);
@@ -453,6 +456,12 @@ void processaIMostraDades(){
 						200,
 						150,
 						200);
+				if((mespost.angle > angleInicialPantalla > mes.angle)||
+						((angleInicialPantalla==0)&&
+								((mes.angle>mespost.angle)||(mempost.angle>360)))){
+					angleInicialPantalla=(mespost.angle>360)mespost.angle-360:mespost.angle;
+					//TODO: Esborrem pantalla
+				}
 			}
 		}
 	}

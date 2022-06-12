@@ -16,6 +16,7 @@ float getAngle(uint16_t data){
 
 float getIncrementAngles(Data data){
 	float angle_dif = getDiferenciaAngles(data);
+
 	return angle_dif/(data.datasize-1);
 }
 
