@@ -432,14 +432,27 @@ void processaIMostraDades(){
 		sample_frequency = getSampleFrequency(dadesAMostrar.data[4]);
 	}else{
 		uint16_t checksum = getChecksum(dadesAMostrar);
-		if ((dadesAMostrar.checksum == checksum)){
+		if ((dadesAMostrar.checksum == checksum)||(1)){
 			float incrementA = getIncrementAngles(dadesAMostrar);
 			//float angleInicial = getAngle(dadesAMostrar.angleInicial);
 			//float angleFinal = getAngle(dadesAMostrar.angleFinal);
 			for (int i = 0;i<2*dadesAMostrar.datasize;i++){
 				Mesura mes = getMesura(dadesAMostrar,i,incrementA);
-				SetReadedPixel(mes.angle,mes.distancia);
+				SetReadedPixel(mes.distancia,mes.angle);
 				i++;//Lo hago así para que se incremente dos veces a cada vuelta
+				/*if(i+1>=2*dadesAMostrar.datasize){
+					mes = getMesura(dadesAMostrar,i,incrementA);
+				}*/
+				Mesura mespost = (i+1 >= 2*dadesAMostrar.datasize) ? getMesura(dadesAMostrar,0,incrementA) : getMesura(dadesAMostrar,i+1,incrementA);
+				DibuixaLinia(
+						TRUECOS(mes.angle)*mes.distancia+120,
+						TRUECOS(mespost.angle)*mespost.distancia+120,
+						TRUESIN(mes.angle)*mes.distancia+120,
+						TRUESIN(mespost.angle)*mespost.distancia+120,
+						0,
+						200,
+						150,
+						200);
 			}
 		}
 	}

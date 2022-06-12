@@ -141,12 +141,69 @@ RetSt PintaRecuadreEstructura(uint8_t Rval, uint8_t Gval, uint8_t Bval){
 	}
 	return OK;
 }
-RetSt SetReadedPixel(uint16_t radi, uint16_t degrees){
+RetSt SetReadedPixel(float radi, float degrees){
 	uint8_t Rval = 200;
 	uint8_t Gval = 150;
 	uint8_t Bval = 200;
-	uint16_t xvalue = cos(degrees)*radi+120;
-	uint16_t yvalue = sin(degrees)*radi+120;
-	SetPixel(xvalue, yvalue, 1, Rval, Gval, Bval);
+	uint16_t xvalue = TRUECOS(degrees)*radi+120;
+	uint16_t yvalue = TRUESIN(degrees)*radi+120;
+	//if(degrees==0) yvalue=120+radi;
+	SetPixel(xvalue, yvalue, 0, Rval, Gval, Bval);
 }
 
+RetSt DibuixaLinia (uint16_t x1, uint16_t x2, uint16_t y1, uint16_t y2, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){
+	/*float pendent = (col_fi-col_inici)/(fila_fi-fila_inici);
+	for(int i = col_inici; i<col_fi; i++){
+		uint16_t y = pendent*i;
+		SetPixel(i,y,alfa,Rval,Gval,Bval);
+	}*/
+
+	 int x, y;
+	 int dx, dy;
+	 int d, incA, incB;
+	 int incAx, incBx, incAy,incBy;
+	 int temp;
+	 dy = y2 - y1;
+	 dx = x2 - x1;
+	 if (dx < 0) { /* Segon o tercer quadrant, semiplà esquerre */
+	 dx = -dx; incBx = -1;
+	 }
+	 else { /* Primer o quart quadrant, semiplà dret */
+	 incBx = 1;
+	 }
+	 if (dy < 0) { /* Tercer o quart quadrant, semiplà inferior */
+	 dy = -dy; incBy = -1;
+	 }
+	 else { /* Primer o segon quadrant, semiplà superior */
+	 incBy = 1;
+	 }
+	 if (dx < dy) { /* Pendents entre 0 i ±45º */
+	 temp = dx; dx = dy; dy = temp;
+	 incAy = incBy;
+	 incAx = 0;
+	 }
+	 else {
+	 incAx = incBx;
+	 incAy = 0;
+	 }
+	 d = 2*dy - dx; /* d0 */
+	 incA = 2*dy; /* Increment si es tria A */
+	 incB = 2 * (dy-dx); /* Increment si es tria B */
+	 x = x1;
+	 y = y1;
+	 for( temp = 0; temp < dx; temp++ ) {
+	 if(d < 0 ) {
+	 x += incAx;
+	 y += incAy;
+	 d += incA;
+	 }
+	 else {
+	 x += incBx;
+	 y += incBy;
+	 d += incB;
+	 }
+	 SetPixel(x, y, alfa,Rval,Gval,Bval);
+	 }
+
+	return(OK);
+}

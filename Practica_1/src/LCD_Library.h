@@ -46,5 +46,6 @@ RetSt DibuixaCircumferencia (uint16_t ccol, uint16_t cfila, uint16_t radi, uint8
 RetSt EsborraPantalla (uint8_t Rval, uint8_t Gval, uint8_t Bval );
 RetSt DibuixaEstructura();
 RetSt PintaRecuadreEstructura(uint8_t Rval, uint8_t Gval, uint8_t Bval);
-RetSt SetReadedPixel(uint16_t radi, uint16_t degrees);
+RetSt SetReadedPixel(float radi, float degrees);
+RetSt DibuixaLinia (uint16_t col_inici, uint16_t col_fi, uint16_t fila_inici, uint16_t fila_fi, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval );
 #endif /* LCD_LIBRARY_H_ */

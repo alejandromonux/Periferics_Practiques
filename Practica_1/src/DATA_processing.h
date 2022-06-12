@@ -20,6 +20,9 @@ typedef struct{
 	float angle;
 	float distancia;
 }Mesura;
+#define TRUECOS(angle) (cos((angle/180)*M_PI))
+#define TRUESIN(angle) (sin((angle/180)*M_PI))
+
 typedef struct{
 	uint8_t used;
 	uint8_t datasize;

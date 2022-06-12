@@ -43,7 +43,7 @@ float getAngleMostra(uint16_t angleInicial, uint16_t numMostra, float incrementA
 Mesura getMesura(Data data, uint16_t numMostra,float increment){
 	Mesura out;
 
-	out.angle = getAngleMostra(data.angleInicial,numMostra, increment);
+	out.angle = getAngleMostra(data.angleInicial,numMostra/2, increment);
 	out.distancia = ((float)((data.data[numMostra+1]<<8)|data.data[numMostra])/65535)*240;
 
 	return out;
