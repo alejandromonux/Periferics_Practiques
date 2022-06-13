@@ -251,6 +251,13 @@ void TIM2_IRQHandler() //RSI Timer2
 		configUsart(0);
     	startPulsado = 1;
 
+    }else if ((GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_7)==0)&&(startPulsado==1)){
+    	startPulsado = 0;
+    	USART_DMACmd(USART1,USART_DMAReq_Rx,DISABLE);
+    	DMA_DoubleBufferModeCmd(DMA2_Stream5,DISABLE);
+    	DMA_ITConfig(DMA2_Stream5,DMA_IT_TC,DISABLE);
+    	DMA_Cmd(DMA2_Stream5,DISABLE);
+    	STM_EVAL_LEDOff(LED4);
     }
 
 	// Netejem la flag
