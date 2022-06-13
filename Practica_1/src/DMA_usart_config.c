@@ -55,9 +55,11 @@ void configUsart(int dataAmount){
 }
 
 Data desencua(){
+	Data out = dataArray[cua[posicio/*++*/]];
+	dataArray[cua[posicio/*++*/]].used = 0;
 	posicio = (posicio+1)%MAX_CUASIZE;
 	pendingData--;
-	return dataArray[cua[posicio/*++*/]];
+	return out;
 }
 
 char isMostraPlenaDeVerdad(){
