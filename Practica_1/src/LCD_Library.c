@@ -145,11 +145,11 @@ RetSt SetReadedPixel(float radi, float degrees){
 	uint8_t Rval = 200;
 	uint8_t Gval = 150;
 	uint8_t Bval = 200;
-	uint16_t xvalue = TRUECOS(degrees)*radi+120;
-	uint16_t yvalue = TRUESIN(degrees)*radi+120;
+	float xvalue = TRUECOS(degrees)*radi+120; //*(24/30)
+	float yvalue = TRUESIN(degrees)*radi+120;
 
 	//if(degrees==0) yvalue=120+radi;
-	SetPixel(xvalue, yvalue, 0, Rval, Gval, Bval);
+	SetPixel((uint16_t)xvalue, (uint16_t)yvalue, 0, Rval, Gval, Bval);
 }
 
 RetSt DibuixaLinia (uint16_t x1, uint16_t x2, uint16_t y1, uint16_t y2, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){

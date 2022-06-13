@@ -49,7 +49,7 @@ Mesura getMesura(Data data, uint16_t numMostra,float increment){
 	Mesura out;
 
 	out.angle = getAngleMostra(data.angleInicial,numMostra/2, increment);
-	out.distancia = ((float)((data.data[numMostra+1]<<8)|data.data[numMostra])/65535)*240;
+	out.distancia = ((float)((data.data[numMostra+1]<<8)|data.data[numMostra])/65535)*196.605;
 	if((165<=out.angle<=195)&&(getDistancia((data.data[numMostra+1]<<8)|data.data[numMostra])<1000)){
 		out.dibuixaVermell=1;
 	}else{
