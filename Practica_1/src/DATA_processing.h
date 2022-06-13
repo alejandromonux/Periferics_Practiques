@@ -19,6 +19,7 @@
 typedef struct{
 	float angle;
 	float distancia;
+	char dibuixaVermell;
 }Mesura;
 #define TRUECOS(angle) (cos((angle/180)*M_PI))
 #define TRUESIN(angle) (sin((angle/180)*M_PI))

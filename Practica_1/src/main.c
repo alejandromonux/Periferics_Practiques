@@ -430,6 +430,7 @@ void mostrarLCD(Mesura* mesures, uint8_t datasize){
 }
 void processaIMostraDades(){
 	Data dadesAMostrar = desencua();
+
 	if (((dadesAMostrar.type&0x0001)==1)&&(sample_frequency == 0)){
 		sample_frequency = getSampleFrequency(dadesAMostrar.data[4]);
 	}else{
@@ -443,10 +444,9 @@ void processaIMostraDades(){
 				Mesura mes = getMesura(dadesAMostrar,i,incrementA);
 				SetReadedPixel(mes.distancia,mes.angle);
 				i++;//Lo hago así para que se incremente dos veces a cada vuelta
-				/*if(i+1>=2*dadesAMostrar.datasize){
-					mes = getMesura(dadesAMostrar,i,incrementA);
-				}*/
+				if (mes.dibuixaVermell==1) PintaRecuadreEstructura(32,0,0);
 				Mesura mespost = (i+1 >= 2*dadesAMostrar.datasize) ? getMesura(dadesAMostrar,0,incrementA) : getMesura(dadesAMostrar,i+1,incrementA);
+				if((mespost.angle>mes.angle)||((mespost.angle<mes.angle)&&(mespost.angle==angleIniciPantalla))){
 				DibuixaLinia(
 						TRUECOS(mes.angle)*mes.distancia+120,
 						TRUECOS(mespost.angle)*mespost.distancia+120,
@@ -456,10 +456,11 @@ void processaIMostraDades(){
 						200,
 						150,
 						200);
-				if((mespost.angle > angleInicialPantalla > mes.angle)||
-						((angleInicialPantalla==0)&&
-								((mes.angle>mespost.angle)||(mempost.angle>360)))){
-					angleInicialPantalla=(mespost.angle>360)mespost.angle-360:mespost.angle;
+				}
+				if((mespost.angle > angleIniciPantalla > mes.angle)||
+						((angleIniciPantalla==0)&&
+								((mes.angle>mespost.angle)||(mespost.angle>360)))){
+					angleIniciPantalla=(mespost.angle>360)?mespost.angle-360:mespost.angle;
 					//TODO: Esborrem pantalla
 				}
 			}

@@ -26,6 +26,10 @@ float getDiferenciaAngles(Data data){
 	return angle_dif;
 }
 
+float getDistancia(uint16_t mesura){
+	return mesura/4;
+}
+
 uint16_t getChecksum(Data data){
 	uint16_t checksum = 0xAA55;
 	checksum ^= data.angleFinal;
@@ -38,7 +42,7 @@ uint16_t getChecksum(Data data){
 	return checksum;
 }
 float getAngleMostra(uint16_t angleInicial, uint16_t numMostra, float incrementAngle){
-	return incrementAngle*numMostra +angleInicial;
+	return incrementAngle*numMostra +getAngle(angleInicial);
 }
 
 Mesura getMesura(Data data, uint16_t numMostra,float increment){
@@ -46,6 +50,10 @@ Mesura getMesura(Data data, uint16_t numMostra,float increment){
 
 	out.angle = getAngleMostra(data.angleInicial,numMostra/2, increment);
 	out.distancia = ((float)((data.data[numMostra+1]<<8)|data.data[numMostra])/65535)*240;
-
+	if((165<=out.angle<=195)&&(getDistancia((data.data[numMostra+1]<<8)|data.data[numMostra])<1000)){
+		out.dibuixaVermell=1;
+	}else{
+		out.dibuixaVermell=0;
+	}
 	return out;
 }

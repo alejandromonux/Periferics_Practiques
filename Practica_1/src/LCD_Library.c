@@ -147,6 +147,7 @@ RetSt SetReadedPixel(float radi, float degrees){
 	uint8_t Bval = 200;
 	uint16_t xvalue = TRUECOS(degrees)*radi+120;
 	uint16_t yvalue = TRUESIN(degrees)*radi+120;
+
 	//if(degrees==0) yvalue=120+radi;
 	SetPixel(xvalue, yvalue, 0, Rval, Gval, Bval);
 }
