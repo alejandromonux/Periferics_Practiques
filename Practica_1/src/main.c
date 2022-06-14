@@ -50,6 +50,8 @@ float savedperiodScaler1 = 0;
 float savedperiodScaler2 = 0;
 /*Variables de muestreo de datos*/
 float angleIniciPantalla = -1;
+char hemDibuixat=0;
+float angleAcum=0;
 /* Private function prototypes */
 /* Private functions */
 
@@ -442,18 +444,31 @@ void processaIMostraDades(){
 		sample_frequency = getSampleFrequency(dadesAMostrar.data[4]);
 	}else{
 		uint16_t checksum = getChecksum(dadesAMostrar);
-		if ((dadesAMostrar.checksum == checksum)||(1)){
+		if ((dadesAMostrar.checksum == checksum)){
 			if(angleIniciPantalla==-1) angleIniciPantalla = getAngle(dadesAMostrar.angleInicial);
 			float incrementA = getIncrementAngles(dadesAMostrar);
 			//float angleInicial = getAngle(dadesAMostrar.angleInicial);
 			//float angleFinal = getAngle(dadesAMostrar.angleFinal);
 			for (int i = 0;i<2*dadesAMostrar.datasize;i++){
 				Mesura mes = getMesura(dadesAMostrar,i,incrementA);
+				//Miramos si toca borrar (antes estaba al final)
+				if((hemDibuixat==1)&&(angleAcum>=360)){
+					//(mespost.angle>360)?mespost.angle-360:mespost.angle;
+					//TODO: Esborrem pantalla
+					EsborraPantalla(0x1FF,0x1FF,0x1FF);
+					DibuixaEstructura();
+					hemDibuixat=0;
+					i=0;
+					angleAcum=0;
+					mes = getMesura(dadesAMostrar,i,incrementA);
+					angleIniciPantalla=mes.angle;
+				}
 				SetReadedPixel(mes.distancia,mes.angle);
+				angleAcum+=incrementA;
 				i++;//Lo hago así para que se incremente dos veces a cada vuelta
 				if (mes.dibuixaVermell==1) PintaRecuadreEstructura(32,0,0);
 				Mesura mespost = (i+1 >= 2*dadesAMostrar.datasize) ? getMesura(dadesAMostrar,0,incrementA) : getMesura(dadesAMostrar,i+1,incrementA);
-				if((mespost.angle>mes.angle)||((mespost.angle<mes.angle)&&(mespost.angle==angleIniciPantalla))){
+				if((mespost.angle>mes.angle)||((mespost.angle<mes.angle)&&(mespost.angle==angleIniciPantalla)&&(angleAcum>=360))){
 				DibuixaLinia(
 						TRUECOS(mes.angle)*mes.distancia+120,
 						TRUECOS(mespost.angle)*mespost.distancia+120,
@@ -464,13 +479,9 @@ void processaIMostraDades(){
 						150,
 						200);
 				}
-				if((mespost.angle > angleIniciPantalla > mes.angle)||
-						((angleIniciPantalla==0)&&
-								((mes.angle>mespost.angle)||(mespost.angle>360)))){
-					angleIniciPantalla=(mespost.angle>360)?mespost.angle-360:mespost.angle;
-					//TODO: Esborrem pantalla
-				}
+
 			}
+			hemDibuixat=1;
 		}
 	}
 }

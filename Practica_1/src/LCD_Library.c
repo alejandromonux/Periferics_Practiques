@@ -17,8 +17,8 @@ void LCD_initialize(){
 	LTDC_LayerPixelFormat(LTDC_Layer1, LTDC_Pixelformat_ARGB1555);
 	LTDC_ReloadConfig(LTDC_VBReload);
 	LCD_SetLayer(LCD_BACKGROUND_LAYER);
-	LCD_Clear(LCD_COLOR_WHITE); //TODO: Cambiarlo por el esborra_LCD
-
+	//LCD_Clear(LCD_COLOR_WHITE); //TODO: Cambiarlo por el esborra_LCD
+	EsborraPantalla(0x1FF,0x1FF,0x1FF);
 
 	//LCD_SPIConfig(); /YA LO HACE LCD_INIT??
 	//SDRAM_Init(); //YA LO HACE LCD_INIT??
