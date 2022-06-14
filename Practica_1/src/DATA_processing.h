@@ -1,10 +1,9 @@
 /*
  * DATA_processing.h
  *
- *  Created on: 30 may. 2022
- *      Author: a-mon
+ *
+ *      Author: alejandro.monux, josemaria.fernandez
  */
-
 #ifndef DATA_PROCESSING_H_
 #define DATA_PROCESSING_H_
 #define MAX_DATASIZE 255

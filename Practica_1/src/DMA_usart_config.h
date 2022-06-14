@@ -1,3 +1,9 @@
+/*
+ * DMA_usart_config.h
+ *
+ *
+ *      Author: alejandro.monux, josemaria.fernandez
+ */
 #ifndef _USARTCONFPRACT2_
 #define _USARTCONFPRACT2_
 
@@ -9,7 +15,7 @@
 #include <stdlib.h>
 #include <DATA_processing.h>
 
-#define DMA_REGISTERBOUNDARY_ADDRESS     ((uint32_t)0x40011000) /*IGUAL NO ESTÁ BIEN. SACADO DE	PAG 89 DEL DATASHEET*/
+#define DMA_REGISTERBOUNDARY_ADDRESS     ((uint32_t)0x40011000) /*SACADO DE	PAG 89 DEL DATASHEET*/
 __IO uint8_t UsartIncomingThingies[512]; //Cosicas
 __IO uint8_t UsartIncomingThingies2[512];
 #define MAX_CUASIZE 512
@@ -27,8 +33,7 @@ char USART_Attention;
 
 unsigned int posicio;
 unsigned char cua[MAX_CUASIZE]; //Num arbitrari
-unsigned int indexCua; //Pot ser que el index doni la volta i avanci la posició??
-
+unsigned int indexCua;
 
 void configUsart(int dataAmount);
 void gestionaUsart();

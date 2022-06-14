@@ -1,7 +1,6 @@
 /*
  * File:     main.c
- * Authors:  Alejandro Mo�ux
- *           Jos� Mar�a Fern�ndez L�pez
+ *      Author: alejandro.monux, josemaria.fernandez
  *
  *
  * */

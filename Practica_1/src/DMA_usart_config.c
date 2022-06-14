@@ -1,3 +1,9 @@
+/*
+ * DMA_usart_config.c
+ *
+ *
+ *      Author: alejandro.monux, josemaria.fernandez
+ */
 #include <DMA_usart_config.h>
 uint8_t hemMiratInici=0;
 uint8_t tipus=0;
@@ -5,7 +11,7 @@ uint8_t tipus=0;
 void configUsart(int dataAmount){
 	DMA_InitTypeDef DMA_InitStructure;
 	/*Per el double buffer mode config*/
-	uint32_t Memory1BaseAddr = 0; /*Esto no sé si está bien pero si no lo tocamos*/
+	uint32_t Memory1BaseAddr = 0;
 	//Primer encenem el clock
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2 ,ENABLE);
 
@@ -153,12 +159,13 @@ void montaDadaIEncua(){
 
 //Es possible que arribin vàries mostres abans de que aquesta funció es faci per primer cop si arriben mostres però no
 //Plenen ningún dels dos buffers
+//CODI NO UTILITZABLE
 char isMostraPlena(){
 	//TODO: Potser podem guardar aquí en un array auxiliar la mostra i passarla al emplena i encua sense tant embolic
 	int bufferActual = anteriorBuffer;
 	hemMiratInici=0;
 	uint8_t hemMiratNumDades=0;
-	quantesDades=255; //FIXME:Mirar que no pueda ser 0 por l ode pillar valores anteriores al [6]
+	quantesDades=255;
 	int16_t numDades= 0;
 	uint8_t * buffer = (bufferActual==0)?UsartIncomingThingies:UsartIncomingThingies2;
 	uint8_t inicial = 0;
@@ -178,12 +185,7 @@ char isMostraPlena(){
 			if((!hemMiratInici)){
 				hemMiratInici=1;
 			}else if (numDades==quantesDades){
-				//MAI ENTRARÀ PER LA CONDICIÓ DEL FOR??
-				/*if(quantesDades!=255){
-					lastDataRead[numDades]='\0'; //AIXÍ SABEM FINS ON LLEGIR
-				}
-				return 1; //TRUE
-				*/
+
 			}else{
 				return 0; //FALSE
 			}
@@ -220,12 +222,11 @@ char isMostraPlena(){
 	anteriorBuffer=bufferActual;
 	if (hemMiratInici==0){
 		return 0;
-	}/*else if(quantesDades!=255){
-		lastDataRead[numDades]='\0'; //AIXÍ SABEM FINS ON LLEGIR
-	}*/
+	}
 	return 1;
 }
 
+//CODI NO UTILITZABLE
 void emplenaIEncua(Data * array, unsigned int index){
 	array[index].used=1;
 	array[index].datasize=quantesDades;
@@ -244,6 +245,7 @@ void emplenaIEncua(Data * array, unsigned int index){
 	cua[indexCua]=index;
 	indexCua = (indexCua+1)%MAX_CUASIZE;
 }
+//CODI NO UTILITZABLE
 void gestionaUsart(){
 	char isMostraFull = isMostraPlena();
 	if(isMostraFull){
@@ -269,10 +271,6 @@ void gestionaUsart(){
 void DMA2_Stream5_IRQHandler()
 {
 	STM_EVAL_LEDToggle(LED4);
-	/*MIRAR SI LA MUESTRA ESTÁ LLENA*/
-	/*
-	*/
-	//USART_Attention=1;
 	isMostraPlenaDeVerdad();
 	// Netejem la flag
 	DMA_ClearFlag(DMA2_Stream5, DMA_FLAG_TCIF5);

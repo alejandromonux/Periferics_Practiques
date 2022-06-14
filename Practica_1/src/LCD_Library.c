@@ -1,8 +1,8 @@
 /*
  * LCD_Library.c
  *
- *  Created on: 21 may. 2022
- *      Author: a-mon
+ *
+ *      Author: alejandro.monux, josemaria.fernandez
  */
 #include "LCD_Library.h"
 
@@ -17,17 +17,9 @@ void LCD_initialize(){
 	LTDC_LayerPixelFormat(LTDC_Layer1, LTDC_Pixelformat_ARGB1555);
 	LTDC_ReloadConfig(LTDC_VBReload);
 	LCD_SetLayer(LCD_BACKGROUND_LAYER);
-	//LCD_Clear(LCD_COLOR_WHITE); //TODO: Cambiarlo por el esborra_LCD
 	EsborraPantalla(0x1FF,0x1FF,0x1FF);
-
-	//LCD_SPIConfig(); /YA LO HACE LCD_INIT??
-	//SDRAM_Init(); //YA LO HACE LCD_INIT??
-	//FMC_SDRAMWriteProtectionConfig(FMC_Bank2_SDRAM,DISABLE); //COMENTADO PORQUE LA FUNCIÓN DE WRITE YA LO HACE SOLO.
-/*
- * 	LCD_SetLayer(LCD_FOREGROUND_LAYER);
-	LCD_DrawRect(120,120,20,20);
- */
 }
+
 
 /*
  * Dibuixa a [col,fila] el píxel amb el valor [alfa, Rval, Gbal, Bval]
@@ -153,11 +145,6 @@ RetSt SetReadedPixel(float radi, float degrees){
 }
 
 RetSt DibuixaLinia (uint16_t x1, uint16_t x2, uint16_t y1, uint16_t y2, uint8_t alfa, uint8_t Rval, uint8_t Gval, uint8_t Bval ){
-	/*float pendent = (col_fi-col_inici)/(fila_fi-fila_inici);
-	for(int i = col_inici; i<col_fi; i++){
-		uint16_t y = pendent*i;
-		SetPixel(i,y,alfa,Rval,Gval,Bval);
-	}*/
 
 	 int x, y;
 	 int dx, dy;

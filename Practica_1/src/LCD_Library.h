@@ -1,8 +1,7 @@
 /*
  * LCD_Library.h
  *
- *  Created on: 21 may. 2022
- *      Author: a-mon
+ *      Author: alejandro.monux, josemaria.fernandez
  */
 
 #ifndef LCD_LIBRARY_H_
