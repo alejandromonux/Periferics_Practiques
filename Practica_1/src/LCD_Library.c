@@ -51,7 +51,7 @@ RetSt SetPixel (uint16_t col, uint16_t fila, uint8_t alfa, uint8_t Rval, uint8_t
  * Returns: 32 bits de info del píxel. 16 HLb tenen 0xFFFF, els 16 LLb tenen info de ARGB.
  */
 uint32_t GetPixel (uint16_t col, uint16_t fila){
-	return frame_buffer[col + fila*LCD_PIXEL_WIDTH];
+	return frame_buffer[(N_COL-col) + fila*LCD_PIXEL_WIDTH];
 }
 
 /*
